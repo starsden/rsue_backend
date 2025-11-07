@@ -14,13 +14,15 @@ class User(Base):
 
     id = Column(pgUUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
     email = Column(String, unique=True, index=True)
-    fullName = Column(String, unique=True, index=True)
+    fullName = Column(String, index=True)
     password = Column(String)
     phone = Column(String)
     role = Column(String, nullable=True)
     companyName = Column(String)
     timezone = Column(String)
     is_active = Column(Boolean, default=False)
+    ver_code = Column(String, nullable=True)
+    code_expires_at = Column(DateTime, nullable=True)
     email_verified = Column(Boolean, default=False)
     created_at = Column(DateTime, default=datetime.now)
     updated_at = Column(DateTime, default=datetime.now)
@@ -65,5 +67,9 @@ class UserResponse(BaseModel):
 
 class TokenData(BaseModel):
     email: str | None = None
+
+class VerifyEmailRequest(BaseModel):
+    email: str
+    code: str
 
 metadata.create_all(bind=engine)

@@ -1,5 +1,5 @@
 from fastapi import APIRouter, Depends
-from app.models.models import UserCreate, UserLogin
+from app.models.models import UserCreate, UserLogin, VerifyEmailRequest
 from fastapi.security import OAuth2PasswordBearer
 from app.services.service import auth_service
 from app.core.core import get_db, SessionLocal as Session
@@ -27,4 +27,10 @@ async def login(user: UserLogin, db: Session = Depends(get_db)):
 async def get_me(token: str = Depends(oauth2_scheme), db: Session = Depends(get_db)):
     service = auth_service(db)
     return await service.get_me(token)
+
+
+@router.post("/auth/verify", tags=auth_tags)
+async def verify_email(request: VerifyEmailRequest, db: Session = Depends(get_db)):
+    service = auth_service(db)
+    return await service.verify_email(request.email, request.code)
 
