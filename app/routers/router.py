@@ -1,5 +1,5 @@
 from fastapi import APIRouter, Depends
-from app.models.models import UserCreate, UserLogin, VerifyEmailRequest
+from app.models.auth import UserCreate, UserLogin, VerifyEmailRequest
 from fastapi.security import OAuth2PasswordBearer
 from app.services.service import auth_service
 from app.core.core import get_db, SessionLocal as Session
@@ -11,25 +11,25 @@ auth_tags=["Authentication Methods"]
 mero_tag=["Event Managment"]
 tckt_tags=["Tickets Methods"]
 
-@router.post("/auth/reg", tags=auth_tags)
+@router.post("/auth/reg", tags=auth_tags, summary="Регистрация пользователя")
 async def register(user: UserCreate, db: Session = Depends(get_db)):
     service = auth_service(db)
     return await service.register(user)
 
 
-@router.post("/auth/login", tags=auth_tags)
+@router.post("/auth/login", tags=auth_tags, summary="Вход пользователя")
 async def login(user: UserLogin, db: Session = Depends(get_db)):
     service = auth_service(db)
     return await service.login(user)
 
 
-@router.get("/auth/me", tags=auth_tags)
+@router.get("/auth/me", tags=auth_tags, summary="Получения данных о пользователе", description="Требуются беарер токен")
 async def get_me(token: str = Depends(oauth2_scheme), db: Session = Depends(get_db)):
     service = auth_service(db)
     return await service.get_me(token)
 
 
-@router.post("/auth/verify", tags=auth_tags)
+@router.post("/auth/verify", tags=auth_tags, summary="Подтверждение почты")
 async def verify_email(request: VerifyEmailRequest, db: Session = Depends(get_db)):
     service = auth_service(db)
     return await service.verify_email(request.email, request.code)

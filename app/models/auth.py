@@ -1,4 +1,4 @@
-from pydantic import BaseModel, Field, validator
+from pydantic import BaseModel, Field
 from sqlalchemy import Column, String, DateTime, Integer, Date, Time, Boolean, MetaData, text, Table, VARCHAR
 from sqlalchemy.dialects.postgresql import UUID as pgUUID
 import uuid

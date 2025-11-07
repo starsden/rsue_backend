@@ -1,35 +1,17 @@
-from app.models.models import UserCreate, UserLogin, User
+# service.py
+from app.models.auth import UserCreate, UserLogin, User
 from app.core.core import get_db
 from app.utils.smtp import send_verification_email, generate_verification_code
+from app.core.security import get_me
 from sqlalchemy.orm import Session
 from fastapi import HTTPException, status, Depends
 import jwt
 from datetime import datetime, timedelta, timezone
 from argon2 import PasswordHasher
-from uuid import UUID
-from fastapi.security import OAuth2PasswordBearer
 
 ph = PasswordHasher()
 SECRET_KEY = "eyJhbGciOiJIUzI1NiJ9.ew0KICAic3ViIjogIjEyMzQ1Njc4OTAiLA0KICAibmFtZSI6ICJBbmlzaCBOYXRoIiwNCiAgImlhdCI6IDE1MTYyMzkwMjINCn0.32CLvsmRfKbQ4ERFs4u66TSOIBKhmg28jM6LqDHgVYM"
 ALGORITHM = "HS256"
-oauth2_scheme = OAuth2PasswordBearer(tokenUrl="/api/auth/login")
-
-
-async def get_user(token: str = Depends(oauth2_scheme), db: Session = Depends(get_db)):
-    try:
-        payload = jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])
-        user_id = payload.get("user_id")
-        role = payload.get("role")
-    except jwt.ExpiredSignatureError:
-        raise HTTPException(status_code=401, detail="Token expired")
-    except jwt.InvalidTokenError:
-        raise HTTPException(status_code=401, detail="Invalid token")
-
-    user = db.query(User).filter(User.id == user_id).first()
-    if not user or user.role != role:
-        raise HTTPException(status_code=401, detail="Invalid user")
-
-    return user
 
 
 class AuthService:
@@ -44,7 +26,6 @@ class AuthService:
             )
 
         hashed_password = ph.hash(user.password[:72])
-
         code = generate_verification_code()
         expires_at = datetime.now(timezone.utc) + timedelta(minutes=10)
 
@@ -77,7 +58,6 @@ class AuthService:
         return {
             "message": "Check your email for verification code",
             "user_id": str(db_user.id)
-            # "email": str(user.email)
         }
 
     async def verify_email(self, email: str, code: str):
@@ -131,47 +111,15 @@ class AuthService:
             "role": db_user.role
         }
 
-    async def get_me(self, token: str):
-        try:
-            payload = jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])
-            user_id = payload.get("user_id")
-        except jwt.ExpiredSignatureError:
-            raise HTTPException(status_code=401, detail="Token expired")
-        except jwt.InvalidTokenError:
-            raise HTTPException(status_code=401, detail="Invalid token")
-
-        user = self.db.query(User).filter(User.id == user_id).first()
-        if not user:
-            raise HTTPException(status_code=404, detail="User not found")
-
+    async def get_me(self, current_user: User = Depends(get_me)):
         return {
-            "id": str(user.id),
-            "fullName": user.fullName,
-            "email": user.email,
-            "role": user.role,
-            "email_verified": user.email_verified
-        }
-    async def get_me(self, token: str):
-        try:
-            payload = jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])
-            user_id = payload.get("user_id")
-            if user_id is None:
-                raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Invalid token")
-        except jwt.ExpiredSignatureError:
-            raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Token expired")
-        except jwt.InvalidTokenError:
-            raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Invalid token")
-
-        user = self.db.query(User).filter(User.id == user_id).first()
-        if not user:
-            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="User not found")
-
-        return {
-            "id": str(user.id),
-            "fullName": user.fullName,
-            "email": user.email,
-            "role": user.role
+            "id": str(current_user.id),
+            "fullName": current_user.fullName,
+            "email": current_user.email,
+            "role": current_user.role,
+            "email_verified": current_user.email_verified
         }
 
-def auth_service(db: Session):
+
+def auth_service(db: Session = Depends(get_db)):
     return AuthService(db)
