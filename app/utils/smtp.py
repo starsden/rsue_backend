@@ -86,7 +86,7 @@ def send_verification_email(email: str, code: str):
             <p>Код действителен 10 минут.</p>
             <p class="footer">
               Если вы не регистрировались — проигнорируйте это письмо.<br>
-              С любовью, <strong>rsue.devoriole.ru</strong>
+              С любовью, <strong>devoriole.ru ❤️</strong>
             </p>
           </div>
         </div>
