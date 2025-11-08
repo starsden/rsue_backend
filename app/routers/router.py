@@ -24,7 +24,7 @@ async def login(user: UserLogin, db: Session = Depends(get_db)):
     return await service.login(user)
 
 
-@router.get("/auth/me", response_model=UserResponse, tags=["Authentication"])
+@router.get("/auth/me", response_model=UserResponse, tags=auth_tags)
 async def get_me(current_user: User = Depends(get_me)):
     return UserResponse(
         id=str(current_user.id),
