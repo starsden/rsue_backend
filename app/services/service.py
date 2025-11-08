@@ -102,8 +102,7 @@ class AuthService:
             raise HTTPException(status_code=401, detail="Wrong password! Otter is angry!")
 
         payload = {
-            "sub": user.email,
-            "user_id": str(db_user.id),
+            "sub": str(db_user.id),
             "role": db_user.role,
             "exp": datetime.utcnow() + timedelta(hours=24)
         }
@@ -114,15 +113,6 @@ class AuthService:
             "token_type": "bearer",
             "user_id": str(db_user.id),
             "role": db_user.role
-        }
-
-    async def get_me(self, current_user: User = Depends(get_me)):
-        return {
-            "id": str(current_user.id),
-            "fullName": current_user.fullName,
-            "email": current_user.email,
-            "role": current_user.role,
-            "email_verified": current_user.email_verified
         }
 
 

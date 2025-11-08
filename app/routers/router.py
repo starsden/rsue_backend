@@ -1,9 +1,12 @@
 from fastapi import APIRouter, Depends
-from app.models.auth import UserCreate, UserLogin, VerifyEmailRequest
+from app.models.auth import UserCreate, UserLogin, VerifyEmailRequest, UserResponse, User
 from fastapi.security import OAuth2PasswordBearer
 from app.services.service import auth_service
 from app.core.core import get_db, SessionLocal as Session
+from app.core.security import get_me
 from uuid import UUID
+
+
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl="/api/auth/login")
 router = APIRouter(prefix="/api")
 
@@ -23,11 +26,14 @@ async def login(user: UserLogin, db: Session = Depends(get_db)):
     return await service.login(user)
 
 
-@router.get("/auth/me", tags=auth_tags, summary="Получения данных о пользователе", description="Требуются беарер токен")
-async def get_me(token: str = Depends(oauth2_scheme), db: Session = Depends(get_db)):
-    service = auth_service(db)
-    return await service.get_me(token)
-
+@router.get("/auth/me", response_model=UserResponse, tags=["Authentication"])
+async def get_me(current_user: User = Depends(get_me)):
+    return UserResponse(
+        id=str(current_user.id),
+        username=current_user.fullName,
+        email=current_user.email,
+        role=current_user.role,
+    )
 
 @router.post("/auth/verify", tags=auth_tags, summary="Подтверждение почты")
 async def verify_email(request: VerifyEmailRequest, db: Session = Depends(get_db)):

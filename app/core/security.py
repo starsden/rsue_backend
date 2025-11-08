@@ -15,26 +15,28 @@ ALGORITHM = "HS256"
 async def get_me(token: str = Depends(oauth2_scheme), db: Session = Depends(get_db)) -> User:
     try:
         payload = jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])
-        user_id: str = payload.get("user_id")
+        user_id: str = payload.get("sub")
         role: str = payload.get("role")
-        if not user_id:
-            raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Invalid token payload")
+        if not user_id or not role:
+            raise HTTPException(status_code=401, detail="Invalid token payload")
     except jwt.ExpiredSignatureError:
-        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Token expired")
+        raise HTTPException(status_code=401, detail="Token expired")
     except jwt.InvalidTokenError:
-        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Invalid token")
+        raise HTTPException(status_code=401, detail="Invalid token")
 
     try:
-        user_id_uuid = UUID(user_id)
+        UUID(user_id)
     except ValueError:
-        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Invalid user ID format")
+        raise HTTPException(status_code=401, detail="Invalid user ID format")
 
-    user = db.query(User).filter(User.id == user_id_uuid).first()
+    user = db.query(User).filter(User.id == user_id).first()
     if not user:
-        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="User not found")
+        raise HTTPException(status_code=401, detail="User not found")
     if not user.email_verified:
-        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Email not verified")
+        raise HTTPException(status_code=403, detail="Email not verified")
+    if not user.is_active:
+        raise HTTPException(status_code=403, detail="User is not active")
     if user.role != role:
-        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Role mismatch")
+        raise HTTPException(status_code=403, detail="Role mismatch")
 
     return user
