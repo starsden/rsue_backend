@@ -18,7 +18,8 @@ class User(Base):
     password = Column(String)
     phone = Column(String)
     role = Column(String, nullable=True)
-    companyName = Column(String)
+    connect_organization = Column(String, nullable=True)
+    companyName = Column(String, nullable=True)
     timezone = Column(String)
     is_active = Column(Boolean, default=False)
     ver_code = Column(String, nullable=True)
@@ -32,8 +33,8 @@ class UserCreate(BaseModel):
     email: str
     phone: str
     password: str = Field(max_length=72)
-    companyName: str
-    role: str = Field(default="User")
+    companyName: str | None = None
+    role: str = Field(default="Founder")
 
 class UserResponse(BaseModel):
     id: str

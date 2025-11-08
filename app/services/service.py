@@ -85,7 +85,7 @@ class AuthService:
         except Exception:
             pass
 
-        return {"message": "Email verified successfully!"}
+        return {"message": "cool!"}
 
 
     async def login(self, user: UserLogin):

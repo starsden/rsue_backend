@@ -1,4 +1,3 @@
-# app/services/orga_service.py
 from app.models.orga import Orga, OrgaCreate, OrgaResponse
 from sqlalchemy.orm import Session
 from fastapi import HTTPException, status
