@@ -9,7 +9,7 @@ class QrService:
         db.query(QrCode).filter( QrCode.organization_id == organization_id, QrCode.is_active == True).update({"is_active": False})
 
         token = generate_token()
-        join_url = f"https://rsue.devoriole.ru/join/{token}"
+        join_url = f"https://rsue.devoriole.ru/api/orga/join/{token}"
         qr_base64 = make_qr_base64(join_url)
 
         expires_at = datetime.now(timezone.utc) + timedelta(seconds=expires_in)
