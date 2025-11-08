@@ -18,11 +18,11 @@ async def get_me(token: str = Depends(oauth2_scheme), db: Session = Depends(get_
         user_id: str = payload.get("sub")
         role: str = payload.get("role")
         if not user_id or not role:
-            raise HTTPException(status_code=401, detail="Invalid token payload")
+            raise HTTPException(status_code=401, detail="The otter ate the token(´ ε ` )♡")
     except jwt.ExpiredSignatureError:
-        raise HTTPException(status_code=401, detail="Token expired")
+        raise HTTPException(status_code=401, detail="Otter did not wait and went home with the token ┐(‘～` )┌")
     except jwt.InvalidTokenError:
-        raise HTTPException(status_code=401, detail="Invalid token")
+        raise HTTPException(status_code=401, detail="The otter ate the token(´ ε ` )♡")
 
     try:
         UUID(user_id)
@@ -31,11 +31,11 @@ async def get_me(token: str = Depends(oauth2_scheme), db: Session = Depends(get_
 
     user = db.query(User).filter(User.id == user_id).first()
     if not user:
-        raise HTTPException(status_code=401, detail="User not found")
+        raise HTTPException(status_code=401, detail="Otter didn't find you in the system!")
     if not user.email_verified:
-        raise HTTPException(status_code=403, detail="Email not verified")
+        raise HTTPException(status_code=403, detail="Otter did not find such an email in the system!")
     if not user.is_active:
-        raise HTTPException(status_code=403, detail="User is not active")
+        raise HTTPException(status_code=403, detail="You haven't played with an otter in a long time(")
     if user.role != role:
         raise HTTPException(status_code=403, detail="Role mismatch")
 

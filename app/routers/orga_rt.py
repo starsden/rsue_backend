@@ -47,11 +47,11 @@ async def join_by(
     ).first()
 
     if not qr:
-        raise HTTPException(status_code=410, detail="QR code expired or invalid")
+        raise HTTPException(status_code=410, detail="QR code is invalid. The otter took him home. ")
 
     org = db.query(Orga).filter(Orga.id == qr.organization_id).first()
     if not org:
-        raise HTTPException(status_code=404, detail="Organization not found")
+        raise HTTPException(status_code=404, detail="Otter did not find such an organization(( ")
 
     if current_user.connect_organization != str(org.id):
         current_user.connect_organization = str(org.id)

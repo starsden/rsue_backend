@@ -84,7 +84,7 @@ class SkladService:
         if not sklad:
             raise HTTPException(
                 status_code=status.HTTP_404_NOT_FOUND,
-                detail="Склад не найден"
+                detail="The otter got lost"
             )
 
         return SkladsResponse.from_orm(sklad)

@@ -26,7 +26,7 @@ def req_found(
     if not current_user.connect_organization:
         raise HTTPException(
             status_code=403,
-            detail="Сначала подключитесь к организации"
+            detail="Firstly, get involved in the organization, and secondly, don't mess with the otter!"
         )
 
     org = db.query(Orga).filter(
@@ -37,7 +37,7 @@ def req_found(
     if not org:
         raise HTTPException(
             status_code=403,
-            detail="you arent founder of this organisation"
+            detail="you arent founder of this organisation( "
         )
 
     return current_user, UUID(current_user.connect_organization)
@@ -62,7 +62,7 @@ async def get_sklads(
     db: Session = Depends(get_db)
 ):
     if not current_user.connect_organization:
-        raise HTTPException(status_code=403, detail="Сначала подключитесь к организации")
+        raise HTTPException(status_code=403, detail="Firstly, get involved in the organization, and secondly, don't mess with the otter!")
 
     service = SkladService(db)
     return service.get_sklads(UUID(current_user.connect_organization), skip, limit)
@@ -75,7 +75,7 @@ async def get_sklad(
     db: Session = Depends(get_db)
 ):
     if not current_user.connect_organization:
-        raise HTTPException(status_code=403, detail="Сначала подключитесь к организации")
+        raise HTTPException(status_code=403, detail="Firstly, get involved in the organization, and secondly, don't mess with the otter!")
 
     service = SkladService(db)
     return service.get_sklad_by_id(sklad_id, UUID(current_user.connect_organization))

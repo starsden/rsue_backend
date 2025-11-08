@@ -90,10 +90,10 @@ class AuthService:
     async def resend_ver(self, email: str):
         user = self.db.query(User).filter(User.email == email).first()
         if not user:
-            raise HTTPException(status_code=404, detail="user not found")
+            raise HTTPException(status_code=404, detail="Otter did not find such a user")
 
         if user.email_verified:
-            raise HTTPException(status_code=400, detail="email already verified")
+            raise HTTPException(status_code=400, detail="Otter has already seen such mail somewhere! Try another email")
 
         if user.code_expires_at and datetime.utcnow() < user.code_expires_at:
             raise HTTPException(

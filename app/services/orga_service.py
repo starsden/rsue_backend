@@ -26,7 +26,7 @@ def cr_orga(db: Session, org_data: OrgaCreate, user_id: UUID) -> OrgaResponse:
     db.flush()
     user = db.query(User).filter(User.id == user_id).first()
     if not user:
-        raise HTTPException(status_code=404, detail="User not found")
+        raise HTTPException(status_code=404, detail="Otter did not find such a user!")
     user.connect_organization = str(db_org.id)
     db.commit()
     db.refresh(db_org)
