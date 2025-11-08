@@ -26,3 +26,5 @@ def cr_orga(db: Session, org_data: OrgaCreate, user_id: UUID) -> OrgaResponse:
     db.refresh(db_org)
 
     return OrgaResponse.from_orm(db_org)
+
+

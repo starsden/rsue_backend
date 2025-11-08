@@ -1,9 +1,10 @@
-from sqlalchemy import Column, String, Boolean, text, ForeignKey
+from sqlalchemy import Column, String, Boolean, text, ForeignKey, DateTime
 from sqlalchemy.dialects.postgresql import UUID as pgUUID, JSONB
 from app.core.core import Base
 from pydantic import BaseModel, Field
 from typing import Literal
 import uuid
+from datetime import date, time, datetime
 from uuid import UUID
 
 class Orga(Base):
@@ -16,16 +17,27 @@ class Orga(Base):
     inn = Column(String, unique=True, index=True)
     address = Column(JSONB, nullable=False, default=dict)
     settings = Column(JSONB, nullable=False, default=dict)
-
     def __repr__(self):
         return f"<Orga {self.name} ({self.legalName})>"
 
+class QrCode(Base):
+    __tablename__ = "qrs"
+
+    id = Column(pgUUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    organization_id = Column(pgUUID(as_uuid=True), ForeignKey("organisations.id", ondelete="CASCADE"), nullable=False, index=True)
+    token = Column(String, unique=True, nullable=False, index=True)
+    expires_at = Column(DateTime(timezone=True), nullable=False, default=datetime.now)
+    created_at = Column(DateTime(timezone=True), server_default=text("TIMEZONE('utc', NOW())"), nullable=False)
+    is_active = Column(Boolean, default=True, nullable=False)
+    def __repr__(self):
+        return f"<QrCode org={self.organization_id} expires={self.expires_at}>"
 
 class Address(BaseModel):
     country: str
     city: str
     street: str
     postalCode: str
+
 
 class Settings(BaseModel):
     currency: str = Field(..., example="RUB")
@@ -52,3 +64,14 @@ class OrgaResponse(BaseModel):
 
     class Config:
         from_attributes = True
+
+
+class QrCodeResponse(BaseModel):
+    qr_image: str  # base64
+    join_url: str
+    expires_at: datetime
+    token: str
+
+    class Config:
+        from_attributes = True
+        
