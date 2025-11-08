@@ -2,7 +2,7 @@ from sqlalchemy import Column, String, Boolean, text, ForeignKey, DateTime
 from sqlalchemy.dialects.postgresql import UUID as pgUUID, JSONB
 from app.core.core import Base
 from pydantic import BaseModel, Field
-from typing import Literal
+from typing import Literal, List
 import uuid
 from datetime import date, time, datetime
 from uuid import UUID
@@ -65,12 +65,35 @@ class OrgaResponse(BaseModel):
     class Config:
         from_attributes = True
 
-class UserInOrgaResponse(BaseModel):
+class UserInOrgaResp(BaseModel):
     id: UUID
     fullName: str
     email: str
     role: str | None = None
     connect_organization: str | None = None
+
+    class Config:
+        from_attributes = True
+
+class UsersInOrg(BaseModel):
+    id: UUID
+    fullName: str
+    email: str
+    phone: str | None = None
+
+    class Config:
+        from_attributes = True
+
+class MyOrga(BaseModel):
+    id: UUID
+    name: str
+    legalName: str
+    description: str | None = None
+    inn: str
+    address: dict
+    settings: dict
+    members_count: int
+    members: List[UsersInOrg]
 
     class Config:
         from_attributes = True

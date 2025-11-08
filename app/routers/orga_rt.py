@@ -4,7 +4,7 @@ from app.core.core import get_db
 from app.core.security import get_me
 from app.services.orga_service import cr_orga
 from app.services.qr_service import QrService
-from app.models.orga import OrgaCreate, OrgaResponse, QrCodeResponse, QrCode, Orga, UserInOrgaResponse
+from app.models.orga import OrgaCreate, OrgaResponse, QrCodeResponse, QrCode, Orga, UserInOrgaResp, MyOrga, UsersInOrg
 from app.models.auth import User
 from fastapi import Depends, HTTPException
 from uuid import UUID
@@ -72,7 +72,7 @@ async def join_by(
     }
 
 
-@orga.get("/{org_id}/members", response_model=List[UserInOrgaResponse], tags=["Organisation"])
+@orga.get("/{org_id}/members", response_model=List[UserInOrgaResp], tags=["Organisation"])
 async def get_organization_members(
     org_id: UUID,
     db: Session = Depends(get_db),
@@ -93,4 +93,47 @@ async def get_organization_members(
         User.connect_organization == str(org_id)
     ).all()
 
-    return [UserInOrgaResponse.from_orm(m) for m in members]
+    return [UserInOrgaResp.from_orm(m) for m in members]
+
+
+@orga.get("/me", response_model=MyOrga, tags=["Organisation"])
+async def get_my_org(current_user: User = Depends(get_me), db: Session = Depends(get_db)):
+    if not current_user.connect_organization:
+        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="You are not a member of the organization. Join us using a QR code")
+
+    try:
+        org_id = UUID(current_user.connect_organization)
+    except ValueError:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="uncorrect org_id"
+        )
+
+    org = db.query(Orga).filter(Orga.id == org_id).first()
+    if not org:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="org not found"
+        )
+
+    members = db.query(User).filter(
+        User.connect_organization == str(org_id)
+    ).all()
+
+    members_count = len(members)
+    members_list = [
+        UsersInOrg.from_orm(user) for user in members
+    ]
+
+    return MyOrga(
+        id=org.id,
+        name=getattr(org, 'name', org.legalName),
+        legalName=org.legalName,
+        description=org.description,
+        inn=org.inn,
+        address=org.address,
+        settings=org.settings,
+        members_count=members_count,
+        members=members_list
+    )
+
