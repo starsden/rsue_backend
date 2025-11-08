@@ -58,11 +58,13 @@ class SkladService:
         return SkladsResponse.from_orm(new_sklad)
 
     def get_sklads(
-        self,
-        organization_id: UUID,
-        skip: int = 0,
-        limit: int = 100
+            self,
+            current_user,
+            skip: int = 0,
+            limit: int = 100
     ) -> List[SkladsResponse]:
+        organization_id = current_user.organization_id
+
         sklads = self.db.query(Sklads).filter(
             Sklads.organization_id == organization_id,
             Sklads.is_deleted == False

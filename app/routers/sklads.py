@@ -62,11 +62,14 @@ async def get_sklads(
     db: Session = Depends(get_db)
 ):
     if not current_user.connect_organization:
-        raise HTTPException(status_code=403, detail="Firstly, get involved in the organization, and secondly, don't mess with the otter!")
-
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Firstly, get involved in the organization, and secondly, don't mess with the otter!"
+        )
+    org_id = UUID(current_user.connect_organization)
     service = SkladService(db)
-    return service.get_sklads(UUID(current_user.connect_organization), skip, limit)
-
+    sklads = service.get_sklads(org_id, skip=skip, limit=limit)
+    return sklads
 
 @sklad.get("/{sklad_id}", response_model=SkladsResponse)
 async def get_sklad(
