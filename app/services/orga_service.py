@@ -2,6 +2,8 @@ from app.models.orga import Orga, OrgaCreate, OrgaResponse
 from sqlalchemy.orm import Session
 from fastapi import HTTPException, status
 from uuid import UUID
+from app.models.auth import User
+
 
 def cr_orga(db: Session, org_data: OrgaCreate, user_id: UUID) -> OrgaResponse:
     existing = db.query(Orga).filter(Orga.inn == org_data.inn).first()
@@ -21,6 +23,11 @@ def cr_orga(db: Session, org_data: OrgaCreate, user_id: UUID) -> OrgaResponse:
     )
 
     db.add(db_org)
+    db.flush()
+    user = db.query(User).filter(User.id == user_id).first()
+    if not user:
+        raise HTTPException(status_code=404, detail="User not found")
+    user.connect_organization = str(db_org.id)
     db.commit()
     db.refresh(db_org)
 

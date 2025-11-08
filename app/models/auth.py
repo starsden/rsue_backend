@@ -6,7 +6,6 @@ from datetime import date, time, datetime
 from app.core.core import Base, engine
 from uuid import UUID, uuid4
 
-
 metadata = MetaData()
 
 class User(Base):

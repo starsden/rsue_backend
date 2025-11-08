@@ -11,7 +11,7 @@ from uuid import UUID
 from datetime import datetime, timedelta, timezone
 
 orga = APIRouter(prefix="/api/orga")
-@orga.post("/create", response_model=OrgaResponse, status_code=status.HTTP_201_CREATED, summary="Создать организацию (требуется авторизация)", tags=["Organisation"])
+@orga.post("/create", response_model=OrgaResponse, status_code=status.HTTP_201_CREATED, summary="Создать организацию", tags=["Organisation"])
 async def create_orga(org_data: OrgaCreate, db: Session = Depends(get_db), current_user: User = Depends(get_me)):
     return cr_orga(db, org_data, user_id=current_user.id)
 
