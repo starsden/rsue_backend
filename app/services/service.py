@@ -1,7 +1,6 @@
-# service.py
 from app.models.auth import UserCreate, UserLogin, User
 from app.core.core import get_db
-from app.utils.smtp import send_verification_email, generate_verification_code
+from app.utils.smtp import send_ver, gen_code, welcome
 from app.core.security import get_me
 from sqlalchemy.orm import Session
 from fastapi import HTTPException, status, Depends
@@ -26,7 +25,7 @@ class AuthService:
             )
 
         hashed_password = ph.hash(user.password[:72])
-        code = generate_verification_code()
+        code = gen_code()
         expires_at = datetime.now(timezone.utc) + timedelta(minutes=10)
 
         db_user = User(
@@ -48,7 +47,7 @@ class AuthService:
         self.db.refresh(db_user)
 
         try:
-            send_verification_email(user.email, code)
+            send_ver(user.email, code)
         except Exception as e:
             raise HTTPException(
                 status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
@@ -81,7 +80,13 @@ class AuthService:
 
         self.db.commit()
 
+        try:
+            welcome(user.email)
+        except Exception:
+            pass
+
         return {"message": "Email verified successfully!"}
+
 
     async def login(self, user: UserLogin):
         db_user = self.db.query(User).filter(User.email == user.email).first()
