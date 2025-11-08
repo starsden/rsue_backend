@@ -1,7 +1,7 @@
 from fastapi import APIRouter, Depends
-from app.models.auth import UserCreate, UserLogin, VerifyEmailRequest, UserResponse, User
+from app.models.auth import UserCreate, UserLogin, VerifyEmailRequest, UserResponse, User, ResendVerificationRequest
 from fastapi.security import OAuth2PasswordBearer
-from app.services.service import auth_service
+from app.services.service import auth_service, send_ver
 from app.core.core import get_db, SessionLocal as Session
 from app.core.security import get_me
 from uuid import UUID
@@ -11,8 +11,6 @@ oauth2_scheme = OAuth2PasswordBearer(tokenUrl="/api/auth/login")
 router = APIRouter(prefix="/api")
 
 auth_tags=["Authentication Methods"]
-mero_tag=["Event Managment"]
-tckt_tags=["Tickets Methods"]
 
 @router.post("/auth/reg", tags=auth_tags, summary="Регистрация пользователя")
 async def register(user: UserCreate, db: Session = Depends(get_db)):
@@ -40,3 +38,8 @@ async def verify_email(request: VerifyEmailRequest, db: Session = Depends(get_db
     service = auth_service(db)
     return await service.verify_email(request.email, request.code)
 
+
+@router.post("/auth/resend", tags=auth_tags, summary="Повторная отправка кода подтверждения")
+async def resend_verification_code(request: ResendVerificationRequest, db: Session = Depends(get_db)):
+    service = auth_service(db)
+    return await service.resend_ver(request.email)

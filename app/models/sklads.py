@@ -4,6 +4,7 @@ from app.core.core import Base
 from pydantic import BaseModel, Field, EmailStr, validator
 from typing import Literal, Optional
 import uuid
+from uuid import UUID
 from datetime import datetime
 
 WarehouseType = Literal["MAIN", "RETAIL", "TRANSIT", "QUARANTINE"]
@@ -28,13 +29,6 @@ class Sklads(Base):
     def __repr__(self):
         return f"<Sklad {self.name} ({self.code})>"
 
-
-from pydantic import BaseModel, Field, EmailStr, validator
-from typing import Literal, Optional
-from uuid import UUID
-from datetime import datetime
-
-WarehouseType = Literal["MAIN", "RETAIL", "TRANSIT", "QUARANTINE"]
 
 
 class AddressSchema(BaseModel):

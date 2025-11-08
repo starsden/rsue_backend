@@ -1,4 +1,4 @@
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, EmailStr
 from sqlalchemy import Column, String, DateTime, Integer, Date, Time, Boolean, MetaData, text, Table, VARCHAR
 from sqlalchemy.dialects.postgresql import UUID as pgUUID
 import uuid
@@ -71,5 +71,9 @@ class TokenData(BaseModel):
 class VerifyEmailRequest(BaseModel):
     email: str
     code: str
+
+class ResendVerificationRequest(BaseModel):
+    email: EmailStr
+
 
 metadata.create_all(bind=engine)

@@ -87,6 +87,39 @@ class AuthService:
 
         return {"message": "cool!"}
 
+    async def resend_ver(self, email: str):
+        user = self.db.query(User).filter(User.email == email).first()
+        if not user:
+            raise HTTPException(status_code=404, detail="user not found")
+
+        if user.email_verified:
+            raise HTTPException(status_code=400, detail="email already verified")
+
+        if user.code_expires_at and datetime.utcnow() < user.code_expires_at:
+            raise HTTPException(
+                status_code=429,
+                detail="stop! i don't like this. please wait "
+            )
+
+        new_code = gen_code()
+        expires_at = datetime.now(timezone.utc) + timedelta(minutes=10)
+
+        user.ver_code = new_code
+        user.code_expires_at = expires_at
+        self.db.commit()
+
+        try:
+            send_ver(email, new_code)
+        except Exception as e:
+            raise HTTPException(
+                status_code=500,
+                detail="failed to send verification email :( sorry.."
+            )
+
+        return {
+            "message": "you lost your previous code! the otter is angry!",
+            "expires_in": 600
+        }
 
     async def login(self, user: UserLogin):
         db_user = self.db.query(User).filter(User.email == user.email).first()

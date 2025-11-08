@@ -15,7 +15,6 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-
 Base.metadata.create_all(bind=engine)
 app.include_router(router)
 app.include_router(orga)
