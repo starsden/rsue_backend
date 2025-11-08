@@ -65,6 +65,17 @@ class OrgaResponse(BaseModel):
     class Config:
         from_attributes = True
 
+class UserInOrgaResponse(BaseModel):
+    id: UUID
+    fullName: str
+    email: str
+    role: str | None = None
+    connect_organization: str | None = None
+
+    class Config:
+        from_attributes = True
+
+
 
 class QrCodeResponse(BaseModel):
     qr_image: str  # base64

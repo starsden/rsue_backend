@@ -4,7 +4,7 @@ from app.core.core import get_db
 from app.core.security import get_me
 from app.services.orga_service import cr_orga
 from app.services.qr_service import QrService
-from app.models.orga import OrgaCreate, OrgaResponse, QrCodeResponse, QrCode, Orga
+from app.models.orga import OrgaCreate, OrgaResponse, QrCodeResponse, QrCode, Orga, UserInOrgaResponse
 from app.models.auth import User
 from fastapi import Depends, HTTPException
 from uuid import UUID
@@ -70,3 +70,27 @@ async def join_by(
         "action": "connect",
         "message": f"{current_user.fullName} success connect to '{org.legalName}'"
     }
+
+
+@orga.get("/{org_id}/members", response_model=List[UserInOrgaResponse], tags=["Organisation"])
+async def get_organization_members(
+    org_id: UUID,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_me)
+):
+    org = db.query(Orga).filter(
+        Orga.id == org_id,
+        Orga.user_id == current_user.id
+    ).first()
+
+    if not org:
+        raise HTTPException(
+            status_code=403,
+            detail="Otter thinks that you are not the owner of the organization! She asked me to tell you that she won't give you the data."
+        )
+
+    members = db.query(User).filter(
+        User.connect_organization == str(org_id)
+    ).all()
+
+    return [UserInOrgaResponse.from_orm(m) for m in members]
