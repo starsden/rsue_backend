@@ -8,12 +8,19 @@ from app.models.orga import OrgaCreate, OrgaResponse, QrCodeResponse, QrCode, Or
 from app.models.auth import User
 from fastapi import Depends, HTTPException
 from uuid import UUID
+from typing import List
 from datetime import datetime, timedelta, timezone
 
 orga = APIRouter(prefix="/api/orga")
 @orga.post("/create", response_model=OrgaResponse, status_code=status.HTTP_201_CREATED, summary="Создать организацию", tags=["Organisation"])
 async def create_orga(org_data: OrgaCreate, db: Session = Depends(get_db), current_user: User = Depends(get_me)):
     return cr_orga(db, org_data, user_id=current_user.id)
+
+@orga.get("/", response_model=List[OrgaResponse], summary="Список всех организаций",  tags=["Organisation"])
+async def get_all_organizations(skip: int = 0, limit: int = 100, db: Session = Depends(get_db), current_user: User = Depends(get_me)):
+    organizations = db.query(Orga).offset(skip).limit(limit).all()
+    return [OrgaResponse.from_orm(org) for org in organizations]
+
 
 @orga.get("/create-qr/{org_id}/", response_model=QrCodeResponse, tags=['QRs'])
 async def get_qr(org_id: UUID, expires_in: int = 86400, db: Session = Depends(get_db),current_user = Depends(get_me)):
