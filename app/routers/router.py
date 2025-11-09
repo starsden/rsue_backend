@@ -43,3 +43,7 @@ async def verify_email(request: VerifyEmailRequest, db: Session = Depends(get_db
 async def resend_verification_code(request: ResendVerificationRequest, db: Session = Depends(get_db)):
     service = auth_service(db)
     return await service.resend_ver(request.email)
+
+@router.post("/health",tags="Service online?")
+async def health():
+    return {"status": "otter said: i'm okey! thank u <3"}
