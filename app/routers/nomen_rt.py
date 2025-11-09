@@ -10,7 +10,7 @@ from app.models.auth import User
 from app.services.nomen_service import NomenclatureService
 
 nomen = APIRouter(prefix="/api/reestr", tags=["Nomenclature"])
-
+h = ["Are you okey?"]
 @nomen.post("/create", response_model=NomenclatureResponse, status_code=status.HTTP_201_CREATED)
 def cr_nomen(data: NomenclatureCreate = Body(...), db: Session = Depends(get_db), current_user: User = Depends(get_me)):
     service = NomenclatureService(db)
@@ -46,3 +46,7 @@ def del_nomen(item_id: UUID = Path(...), db: Session = Depends(get_db), current_
 def search(barcode: str = Query(..., min_length=8), db: Session = Depends(get_db), current_user: User = Depends(get_me)):
     service = NomenclatureService(db)
     return service.search(barcode, current_user=current_user)
+
+@nomen.post("/health", tags=h)
+async def health():
+    return {"status": "otter said: i'm okey! thank u <3"}
