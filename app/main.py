@@ -2,6 +2,7 @@ from fastapi import FastAPI
 from app.routers.router import router
 from app.routers.orga_rt import orga
 from app.routers.sklads import sklad
+from app.routers.nomen_rt import nomen
 from app.core.core import engine, Base
 from fastapi.middleware.cors import CORSMiddleware
 
@@ -19,6 +20,7 @@ Base.metadata.create_all(bind=engine)
 app.include_router(router)
 app.include_router(orga)
 app.include_router(sklad)
+app.include_router(nomen)
 
 
 if __name__ == "__main__":
