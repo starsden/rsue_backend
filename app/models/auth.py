@@ -18,6 +18,7 @@ class User(Base):
     phone = Column(String)
     role = Column(String, nullable=True)
     connect_organization = Column(String, nullable=True)
+    choosen_sklad = Column(pgUUID, nullable=True)
     companyName = Column(String, nullable=True)
     timezone = Column(String)
     is_active = Column(Boolean, default=False)
@@ -40,6 +41,7 @@ class UserResponse(BaseModel):
     username: str
     email: str
     role: str
+    choosen_sklad: UUID | None = None
 
     class Config:
         from_attributes = True
@@ -74,6 +76,29 @@ class VerifyEmailRequest(BaseModel):
 
 class ResendVerificationRequest(BaseModel):
     email: EmailStr
+
+class ChooseSkladRequest(BaseModel):
+    sklad_id: UUID = Field(..., description="UUID of choosed")
+
+    class Config:
+        json_schema_extra = {
+            "example": {
+                "sklad_id": "3fa85f64-5717-4562-b3fc-2c963f66afa6"
+            }
+        }
+
+class ChooseSkladResponse(BaseModel):
+    message: str = "sklad successfully choosen"
+    choosen_sklad: UUID
+
+    class Config:
+        json_schema_extra = {
+            "example": {
+                "message": "Склад успешно выбран",
+                "choosen_sklad": "3fa85f64-5717-4562-b3fc-2c963f66afa6"
+            }
+        }
+
 
 
 metadata.create_all(bind=engine)

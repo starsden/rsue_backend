@@ -11,11 +11,7 @@ class SkladService:
     def __init__(self, db: Session):
         self.db = db
 
-    def create_sklad(
-        self,
-        sklad_data: SkladsCreate,
-        organization_id: UUID
-    ) -> SkladsResponse:
+    def create_sklad(self, sklad_data: SkladsCreate, organization_id: UUID) -> SkladsResponse:
         if self.db.query(Sklads).filter(
             Sklads.code == sklad_data.code,
             Sklads.is_deleted == False
@@ -67,11 +63,7 @@ class SkladService:
         )
         return [SkladsResponse.from_orm(sklad) for sklad in sklads]
 
-    def get_sklad_by_id(
-        self,
-        sklad_id: UUID,
-        organization_id: UUID
-    ) -> SkladsResponse:
+    def get_sklad_by_id(self, sklad_id: UUID, organization_id: UUID) -> SkladsResponse:
         sklad = self.db.query(Sklads).filter(
             Sklads.id == sklad_id,
             Sklads.organization_id == organization_id,
@@ -86,12 +78,7 @@ class SkladService:
 
         return SkladsResponse.from_orm(sklad)
 
-    def update_sklad(
-        self,
-        sklad_id: UUID,
-        update_data: SkladsUpdate,
-        organization_id: UUID
-    ) -> SkladsResponse:
+    def update_sklad(self, sklad_id: UUID, update_data: SkladsUpdate, organization_id: UUID) -> SkladsResponse:
         sklad = self.db.query(Sklads).filter(
             Sklads.id == sklad_id,
             Sklads.organization_id == organization_id,
@@ -127,11 +114,7 @@ class SkladService:
         self.db.refresh(sklad)
         return SkladsResponse.from_orm(sklad)
 
-    def delete_sklad(
-        self,
-        sklad_id: UUID,
-        organization_id: UUID
-    ) -> dict:
+    def delete_sklad(self, sklad_id: UUID, organization_id: UUID) -> dict:
         sklad = self.db.query(Sklads).filter(
             Sklads.id == sklad_id,
             Sklads.organization_id == organization_id,

@@ -5,9 +5,9 @@ from typing import List
 
 from app.core.core import get_db
 from app.core.security import get_me
-from app.models.auth import User
+from app.models.auth import User, ChooseSkladRequest, ChooseSkladResponse
 from app.models.orga import Orga
-from app.models.sklads import SkladsCreate, SkladsUpdate, SkladsResponse
+from app.models.sklads import SkladsCreate, SkladsUpdate, SkladsResponse, Sklads
 from app.services.sklads import SkladService
 
 sklad = APIRouter(prefix="/api/sklads", tags=["Sklads"])
@@ -105,3 +105,34 @@ async def delete_sklad(
     current_user, org_id = deps
     service = SkladService(db)
     return service.delete_sklad(sklad_id, org_id)
+
+
+
+@sklad.post("/choose-sklad", response_model=ChooseSkladResponse,summary="Выбрать текущий склад для работы")
+async def choose_sklad(request: ChooseSkladRequest, db: Session = Depends(get_db), current_user: User = Depends(get_me)):
+    if not current_user.connect_organization:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="User is not associated with any organization"
+        )
+
+    sklad = db.query(Sklads).filter(
+        Sklads.id == request.sklad_id,
+        Sklads.organization_id == current_user.connect_organization,
+        Sklads.is_deleted == False
+    ).first()
+
+    if not sklad:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Warehouse not found or does not belong to your organization"
+        )
+
+    current_user.choosen_sklad = request.sklad_id
+    db.commit()
+    db.refresh(current_user)
+
+    return ChooseSkladResponse(
+        message="Склад успешно выбран",
+        choosen_sklad=request.sklad_id
+    )
