@@ -108,7 +108,7 @@ async def delete_sklad(
 
 
 
-@sklad.post("/choose-sklad", response_model=ChooseSkladResponse,summary="Выбрать текущий склад для работы")
+@sklad.post("/choose", response_model=ChooseSkladResponse,summary="Выбрать текущий склад для работы")
 async def choose_sklad(request: ChooseSkladRequest, db: Session = Depends(get_db), current_user: User = Depends(get_me)):
     if not current_user.connect_organization:
         raise HTTPException(
