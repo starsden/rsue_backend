@@ -5,13 +5,16 @@ from app.core.core import get_db
 from app.models.auth import User
 import jwt
 from uuid import UUID
+from argon2 import PasswordHasher
+from argon2.exceptions import VerifyMismatchError
+
 
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl="/api/auth/login")
 
 SECRET_KEY = "eyJhbGciOiJIUzI1NiJ9.ew0KICAic3ViIjogIjEyMzQ1Njc4OTAiLA0KICAibmFtZSI6ICJBbmlzaCBOYXRoIiwNCiAgImlhdCI6IDE1MTYyMzkwMjINCn0.32CLvsmRfKbQ4ERFs4u66TSOIBKhmg28jM6LqDHgVYM"
 ALGORITHM = "HS256"
 
-
+ph = PasswordHasher()
 async def get_me(token: str = Depends(oauth2_scheme), db: Session = Depends(get_db)) -> User:
     try:
         payload = jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])
@@ -40,3 +43,15 @@ async def get_me(token: str = Depends(oauth2_scheme), db: Session = Depends(get_
         raise HTTPException(status_code=403, detail="Role mismatch")
 
     return user
+
+def get_hash(password: str) -> str:
+    return ph.hash(password[:72])
+
+def verify_password(plain_password: str, password: str) -> bool:
+    try:
+        ph.verify(password, plain_password[:72])
+        return True
+    except VerifyMismatchError:
+        return False
+    except Exception:
+        return False

@@ -17,6 +17,8 @@ class Orga(Base):
     inn = Column(String, unique=True, index=True)
     address = Column(JSONB, nullable=False, default=dict)
     settings = Column(JSONB, nullable=False, default=dict)
+    is_deleted = Column(Boolean, default=False, nullable=False)
+    deleted_at = Column(DateTime(timezone=True), nullable=True)
     def __repr__(self):
         return f"<Orga {self.name} ({self.legalName})>"
 
@@ -108,4 +110,7 @@ class QrCodeResponse(BaseModel):
 
     class Config:
         from_attributes = True
-        
+
+
+class DeleteOrga(BaseModel):
+    password: str

@@ -10,6 +10,10 @@ from fastapi import Depends, HTTPException
 from uuid import UUID
 from typing import List
 from datetime import datetime, timedelta, timezone
+from app.models.orga import DeleteOrga
+from app.services.orga_service import del_orga
+
+
 
 orga = APIRouter(prefix="/api/orga")
 @orga.post("/create", response_model=OrgaResponse, status_code=status.HTTP_201_CREATED, summary="Создать организацию", tags=["Organisation"])
@@ -137,3 +141,12 @@ async def get_my_org(current_user: User = Depends(get_me), db: Session = Depends
         members=members_list
     )
 
+
+@orga.delete("/{org_id}", response_model=dict, status_code=status.HTTP_200_OK, summary="Удалить организацию (с подтверждением паролем)", tags=["Organisation"])
+async def delete_organization_endpoint(
+    org_id: UUID,
+    request: DeleteOrga,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_me)
+):
+    return del_orga(db=db, org_id=org_id, user_id=current_user.id, password=request.password)
