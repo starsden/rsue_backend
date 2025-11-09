@@ -5,7 +5,7 @@ from app.routers.sklads import sklad
 from app.core.core import engine, Base
 from fastapi.middleware.cors import CORSMiddleware
 
-app = FastAPI(title="RSUE Backend", description="rsue.devoriole.ru", docs_url="/", version="0.2.1")
+app = FastAPI(title="RSUE Backend", description="rsue.devoriole.ru", docs_url="/", version="0.3.0")
 
 app.add_middleware(
     CORSMiddleware,
