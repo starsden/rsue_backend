@@ -13,10 +13,7 @@ from app.services.sklads import SkladService
 sklad = APIRouter(prefix="/api/sklads", tags=["Sklads"])
 
 
-def req_found(
-    current_user: User = Depends(get_me),
-    db: Session = Depends(get_db)
-):
+def req_found(current_user: User = Depends(get_me), db: Session = Depends(get_db)):
     if current_user.role != "Founder":
         raise HTTPException(
             status_code=403,
@@ -55,28 +52,14 @@ async def create_sklad(
 
 
 @sklad.get("/", response_model=List[SkladsResponse])
-async def get_sklads(
-    skip: int = 0,
-    limit: int = 100,
-    current_user: User = Depends(get_me),
-    db: Session = Depends(get_db)
-):
-    if not current_user.connect_organization:
-        raise HTTPException(
-            status_code=status.HTTP_403_FORBIDDEN,
-            detail="Firstly, get involved in the organization, and secondly, don't mess with the otter!"
-        )
-    org_id = UUID(current_user.connect_organization)
+async def get_sklads(skip: int = 0, limit: int = 100, deps: tuple = Depends(req_found), db: Session = Depends(get_db)):
+    current_user, org_id = deps
     service = SkladService(db)
     sklads = service.get_sklads(org_id, skip=skip, limit=limit)
     return sklads
 
 @sklad.get("/{sklad_id}", response_model=SkladsResponse)
-async def get_sklad(
-    sklad_id: UUID,
-    current_user: User = Depends(get_me),
-    db: Session = Depends(get_db)
-):
+async def get_sklad(sklad_id: UUID, current_user: User = Depends(get_me), db: Session = Depends(get_db)):
     if not current_user.connect_organization:
         raise HTTPException(status_code=403, detail="Firstly, get involved in the organization, and secondly, don't mess with the otter!")
 
@@ -85,23 +68,14 @@ async def get_sklad(
 
 
 @sklad.patch("/{sklad_id}", response_model=SkladsResponse)
-async def update_sklad(
-    sklad_id: UUID,
-    data: SkladsUpdate,
-    deps: tuple = Depends(req_found),
-    db: Session = Depends(get_db)
-):
+async def update_sklad(sklad_id: UUID, data: SkladsUpdate, deps: tuple = Depends(req_found), db: Session = Depends(get_db)):
     current_user, org_id = deps
     service = SkladService(db)
     return service.update_sklad(sklad_id, data, org_id)
 
 
 @sklad.delete("/{sklad_id}")
-async def delete_sklad(
-    sklad_id: UUID,
-    deps: tuple = Depends(req_found),
-    db: Session = Depends(get_db)
-):
+async def delete_sklad(sklad_id: UUID, deps: tuple = Depends(req_found), db: Session = Depends(get_db)):
     current_user, org_id = deps
     service = SkladService(db)
     return service.delete_sklad(sklad_id, org_id)
