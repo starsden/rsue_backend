@@ -35,6 +35,7 @@ class NomenclatureService:
             )
 
         properties = data.properties.dict() if data.properties else {}
+        quantity = data.quantity if data.quantity is not None else 1
 
         new_item = Nomenclature(
             name=data.name,
@@ -42,6 +43,7 @@ class NomenclatureService:
             barcode=data.barcode,
             unit=data.unit,
             category_id=data.category_id,
+            quantity=quantity,
             properties=properties,
             organization_id=organization_id
         )
@@ -50,12 +52,12 @@ class NomenclatureService:
             self.db.add(new_item)
             self.db.commit()
             self.db.refresh(new_item)
-        except IntegrityError:
+        except IntegrityError as e:
             self.db.rollback()
             raise HTTPException(
                 status_code=status.HTTP_400_BAD_REQUEST,
-                detail="Data error"
-            )
+                detail="Data error: possibly duplicate barcode or constraint violation"
+            ) from e
 
         return NomenclatureResponse.from_orm(new_item)
 
@@ -123,8 +125,14 @@ class NomenclatureService:
 
         if "properties" in update_dict and update_dict["properties"] is not None:
             props = update_dict["properties"]
-            if hasattr(props, "dict"):
-                update_dict["properties"] = props.dict()
+            update_dict["properties"] = props.dict() if hasattr(props, "dict") else props
+
+        if "quantity" in update_dict:
+            if update_dict["quantity"] < 0:
+                raise HTTPException(
+                    status_code=status.HTTP_400_BAD_REQUEST,
+                    detail="Quantity cannot be negative"
+                )
 
         for key, value in update_dict.items():
             setattr(item, key, value)
