@@ -80,15 +80,10 @@ async def get_organization_members(
     db: Session = Depends(get_db),
     current_user: User = Depends(get_me)
 ):
-    org = db.query(Orga).filter(
-        Orga.id == org_id,
-        Orga.user_id == current_user.id
-    ).first()
-
-    if not org:
+    if current_user.connect_organization != str(org_id):
         raise HTTPException(
             status_code=403,
-            detail="Otter thinks that you are not the owner of the organization! She asked me to tell you that she won't give you the data."
+            detail="Otter think: you are not a member of this organization"
         )
 
     members = db.query(User).filter(
