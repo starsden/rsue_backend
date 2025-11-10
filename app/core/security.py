@@ -47,9 +47,9 @@ async def get_me(token: str = Depends(oauth2_scheme), db: Session = Depends(get_
 def get_hash(password: str) -> str:
     return ph.hash(password[:72])
 
-def verify_password(plain_password: str, password: str) -> bool:
+def verify_password(plain_password: str, hashed_password: str) -> bool:
     try:
-        ph.verify(password, plain_password[:72])
+        ph.verify(hashed_password, plain_password[:72])
         return True
     except VerifyMismatchError:
         return False

@@ -20,6 +20,13 @@ async def create_orga(org_data: OrgaCreate, db: Session = Depends(get_db), curre
 
 @orga.get("/", response_model=List[OrgaResponse], summary="Список всех организаций",  tags=["Organisation"])
 async def get_all_organizations(skip: int = 0, limit: int = 100, db: Session = Depends(get_db), current_user: User = Depends(get_me)):
+    if limit > 1000:
+        limit = 1000
+    if limit < 1:
+        limit = 1
+    if skip < 0:
+        skip = 0
+    
     organizations = db.query(Orga).offset(skip).limit(limit).all()
     return [OrgaResponse.from_orm(org) for org in organizations]
 

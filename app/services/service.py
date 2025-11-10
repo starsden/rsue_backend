@@ -7,10 +7,10 @@ from fastapi import HTTPException, status, Depends
 import jwt
 from datetime import datetime, timedelta, timezone
 from argon2 import PasswordHasher
+from argon2.exceptions import VerifyMismatchError
+from app.core.security import SECRET_KEY, ALGORITHM
 
 ph = PasswordHasher()
-SECRET_KEY = "eyJhbGciOiJIUzI1NiJ9.ew0KICAic3ViIjogIjEyMzQ1Njc4OTAiLA0KICAibmFtZSI6ICJBbmlzaCBOYXRoIiwNCiAgImlhdCI6IDE1MTYyMzkwMjINCn0.32CLvsmRfKbQ4ERFs4u66TSOIBKhmg28jM6LqDHgVYM"
-ALGORITHM = "HS256"
 
 
 class AuthService:
@@ -70,7 +70,7 @@ class AuthService:
         if user.ver_code != code:
             raise HTTPException(status_code=400, detail="Invalid verification code")
 
-        if datetime.utcnow() > user.code_expires_at:
+        if datetime.now(timezone.utc) > user.code_expires_at:
             raise HTTPException(status_code=400, detail="Verification code expired")
 
         user.email_verified = True
@@ -95,7 +95,7 @@ class AuthService:
         if user.email_verified:
             raise HTTPException(status_code=400, detail="Otter has already seen such mail somewhere! Try another email")
 
-        if user.code_expires_at and datetime.utcnow() < user.code_expires_at:
+        if user.code_expires_at and datetime.now(timezone.utc) < user.code_expires_at:
             raise HTTPException(
                 status_code=429,
                 detail="stop! i don't like this. please wait "
@@ -131,13 +131,15 @@ class AuthService:
 
         try:
             ph.verify(db_user.password, user.password[:72])
-        except:
+        except VerifyMismatchError:
+            raise HTTPException(status_code=401, detail="Wrong password! Otter is angry!")
+        except Exception:
             raise HTTPException(status_code=401, detail="Wrong password! Otter is angry!")
 
         payload = {
             "sub": str(db_user.id),
             "role": db_user.role,
-            "exp": datetime.utcnow() + timedelta(hours=24)
+            "exp": datetime.now(timezone.utc) + timedelta(hours=24)
         }
         token = jwt.encode(payload, SECRET_KEY, algorithm=ALGORITHM)
 
