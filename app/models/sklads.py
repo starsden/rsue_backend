@@ -1,7 +1,7 @@
 from sqlalchemy import Column, String, Boolean, Enum, text, DateTime
 from sqlalchemy.dialects.postgresql import UUID as pgUUID, JSONB
 from app.core.core import Base
-from pydantic import BaseModel, Field, EmailStr, validator
+from pydantic import BaseModel, Field, EmailStr, validator, model_validator
 from typing import Literal, Optional
 import uuid
 from uuid import UUID
