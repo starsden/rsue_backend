@@ -8,7 +8,7 @@ from app.core.core import engine, Base
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
 
-app = FastAPI(title="RSUE Backend", description="## Otter greets you!\n\nrsue.devoriole.ru", docs_url="/", version="0.3.0")
+app = FastAPI(title="RSUE Backend", description="## Otter greets you!\n\nrsue.devoriole.ru", docs_url="/papers", version="0.4.0")
 app.mount("/static", StaticFiles(directory="static"), name="static")
 
 app.add_middleware(
