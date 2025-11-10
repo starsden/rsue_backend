@@ -114,3 +114,13 @@ class QrCodeResponse(BaseModel):
 
 class DeleteOrga(BaseModel):
     password: str
+
+class OrgaUpdate(BaseModel):
+    legalName: str | None = None
+    description: str | None = None
+    inn: str | None = None
+    address: Address | None = None
+    settings: Settings | None = None
+
+    class Config:
+        from_attributes = True

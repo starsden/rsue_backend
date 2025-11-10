@@ -2,16 +2,14 @@ from fastapi import APIRouter, Depends, status
 from sqlalchemy.orm import Session
 from app.core.core import get_db
 from app.core.security import get_me
-from app.services.orga_service import cr_orga
+from app.services.orga_service import cr_orga, del_orga, upd_orga
 from app.services.qr_service import QrService
-from app.models.orga import OrgaCreate, OrgaResponse, QrCodeResponse, QrCode, Orga, UserInOrgaResp, MyOrga, UsersInOrg
+from app.models.orga import OrgaCreate, OrgaResponse, QrCodeResponse, QrCode, Orga, UserInOrgaResp, MyOrga, UsersInOrg, DeleteOrga, OrgaUpdate
 from app.models.auth import User
 from fastapi import Depends, HTTPException
 from uuid import UUID
 from typing import List
 from datetime import datetime, timedelta, timezone
-from app.models.orga import DeleteOrga
-from app.services.orga_service import del_orga
 
 
 
@@ -143,10 +141,9 @@ async def get_my_org(current_user: User = Depends(get_me), db: Session = Depends
 
 
 @orga.delete("/{org_id}", response_model=dict, status_code=status.HTTP_200_OK, summary="Удалить организацию (с подтверждением паролем)", tags=["Organisation"])
-async def delete_organization_endpoint(
-    org_id: UUID,
-    request: DeleteOrga,
-    db: Session = Depends(get_db),
-    current_user: User = Depends(get_me)
-):
+async def delete_orga(org_id: UUID, request: DeleteOrga, db: Session = Depends(get_db), current_user: User = Depends(get_me)):
     return del_orga(db=db, org_id=org_id, user_id=current_user.id, password=request.password)
+
+@orga.patch("/upd/{org_id}", response_model=dict, status_code=status.HTTP_200_OK, summary="Обновить организацию", tags=["Organisation"])
+async def update_organization_endpoint(org_id: UUID, update_data: OrgaUpdate, db: Session = Depends(get_db), current_user: User = Depends(get_me)):
+    return upd_orga(db=db, org_id=org_id, user_id=current_user.id, update_data=update_data)

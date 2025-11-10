@@ -1,4 +1,4 @@
-from app.models.orga import Orga, OrgaCreate, OrgaResponse, QrCode
+from app.models.orga import Orga, OrgaCreate, OrgaResponse, QrCode, OrgaUpdate
 from sqlalchemy.orm import Session
 from fastapi import HTTPException, status
 from uuid import UUID
@@ -85,4 +85,45 @@ def del_orga(db: Session,org_id: UUID, user_id: UUID, password: str) -> dict:
         "message": f"Organization '{org.legalName}' has been deleted.",
         "org_id": str(org_id),
         "deleted_at": org.deleted_at.isoformat()
+    }
+
+def upd_orga(db: Session, org_id: UUID, user_id: UUID, update_data: OrgaUpdate) -> dict:
+    user = db.query(User).filter(User.id == user_id).first()
+    if not user:
+        raise HTTPException(status_code=404, detail="User not found")
+    if user.role != "Founder":
+        raise HTTPException(status_code=403, detail="Only Founder can update organization")
+
+    org = db.query(Orga).filter(
+        Orga.id == org_id,
+        Orga.user_id == user_id,
+        Orga.is_deleted == False
+    ).first()
+
+    if not org:
+        raise HTTPException(status_code=404, detail="Organization not found or not owner")
+
+    if update_data.inn is not None and update_data.inn != org.inn:
+        existing = db.query(Orga).filter(
+            Orga.inn == update_data.inn,
+            Orga.id != org_id,
+            Orga.is_deleted == False
+        ).first()
+        if existing:
+            raise HTTPException(status_code=400, detail="INN already used by another organization")
+
+    update_dict = update_data.dict(exclude_unset=True)
+    for key, value in update_dict.items():
+        if key in ["address", "settings"]:
+            setattr(org, key, value.dict() if value else org.__getattribute__(key))
+        else:
+            setattr(org, key, value)
+
+    db.commit()
+    db.refresh(org)
+
+    return {
+        "message": f"Organization '{org.legalName}' has been updated.",
+        "org_id": str(org.id),
+        "updated_at": datetime.now(timezone.utc).isoformat()
     }
