@@ -6,7 +6,7 @@ from app.routers.nomen_rt import nomen
 from app.core.core import engine, Base
 from fastapi.middleware.cors import CORSMiddleware
 
-app = FastAPI(title="RSUE Backend", description="rsue.devoriole.ru", docs_url="/", version="0.3.0")
+app = FastAPI(title="RSUE Backend", description="## Otter greets you!\n\nrsue.devoriole.ru", docs_url="/", version="0.3.0")
 
 app.add_middleware(
     CORSMiddleware,

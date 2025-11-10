@@ -13,6 +13,10 @@ router = APIRouter(prefix="/api")
 auth_tags=["Authentication Methods"]
 h = ["Are you okey?"]
 
+@router.post("/health", tags=h)
+async def health():
+    return {"status": "otter said: i'm okey! thank u <3"}
+
 @router.post("/auth/reg", tags=auth_tags, summary="Регистрация пользователя")
 async def register(user: UserCreate, db: Session = Depends(get_db)):
     service = auth_service(db)
@@ -44,6 +48,3 @@ async def verify_email(request: VerifyEmailRequest, db: Session = Depends(get_db
 async def resend_verification_code(request: ResendVerificationRequest, db: Session = Depends(get_db)):
     service = auth_service(db)
     return await service.resend_ver(request.email)
-@router.post("/health", tags=h)
-async def health():
-    return {"status": "otter said: i'm okey! thank u <3"}
