@@ -15,7 +15,7 @@ class User(Base):
     email = Column(String, unique=True, index=True)
     fullName = Column(String, index=True)
     password = Column(String)
-    phone = Column(String)
+    phone = Column(String, nullable=True)
     role = Column(String, nullable=True)
     connect_organization = Column(String, nullable=True)
     choosen_sklad = Column(pgUUID, nullable=True)
@@ -31,7 +31,7 @@ class User(Base):
 class UserCreate(BaseModel):
     fullName: str
     email: str
-    phone: str
+    phone: str | None = None
     password: str = Field(max_length=72)
     companyName: str | None = None
     role: str = Field(default="Founder")
