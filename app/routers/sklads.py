@@ -14,12 +14,6 @@ sklad = APIRouter(prefix="/api/sklads", tags=["Sklads"])
 
 
 def req_found(current_user: User = Depends(get_me), db: Session = Depends(get_db)):
-    if current_user.role != "Founder":
-        raise HTTPException(
-            status_code=403,
-            detail="only founder can access sklads"
-        )
-
     if not current_user.connect_organization:
         raise HTTPException(
             status_code=403,

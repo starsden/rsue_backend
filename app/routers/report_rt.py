@@ -19,11 +19,7 @@ from app.models.docs import InventoryReportRequest, VerifyByHash
 pdf = APIRouter(prefix="/api/report", tags=["PDF Reports"])
 
 @pdf.post("/inventory")
-async def get_inventory_report(
-    request: InventoryReportRequest = Body(...),
-    db: Session = Depends(get_db),
-    current_user: User = Depends(get_me)
-):
+async def get_inventory_report(request: InventoryReportRequest = Body(...), db: Session = Depends(get_db), current_user: User = Depends(get_me)):
     pdf_service = PDFService(db)
     result = pdf_service.gen_report(current_user, sklad=request.sklad, sklad_id=request.sklad_id)
 
@@ -36,11 +32,7 @@ async def get_inventory_report(
     })
 
 @pdf.post("/inventory/download", response_class=StreamingResponse)
-async def download_inventory_report(
-    request: InventoryReportRequest = Body(...),
-    db: Session = Depends(get_db),
-    current_user: User = Depends(get_me)
-):
+async def download_inventory_report(request: InventoryReportRequest = Body(...), db: Session = Depends(get_db), current_user: User = Depends(get_me)):
     pdf_service = PDFService(db)
     result = pdf_service.gen_report(current_user, sklad=request.sklad, sklad_id=request.sklad_id)
 
