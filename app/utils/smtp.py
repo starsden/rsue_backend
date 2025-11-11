@@ -193,3 +193,93 @@ def welcome(email: str):
     except Exception as e:
         print(f"Ошибка отправки письма: {e}")
         raise
+
+def send_invitation(email: str, fullName: str, orgName: str, invite_url: str):
+    subject = f"Приглашение в организацию {orgName}"
+    body = f"""
+    <!doctype html>
+    <html>
+      <head>
+        <meta charset='utf-8'>
+        <style amp4email-boilerplate>body{{visibility:hidden}}</style>
+        <style>
+          body {{
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+            background-color: #f5f5f7;
+            margin: 0;
+            padding: 0;
+            color: #1d1d1f;
+          }}
+          .background {{
+            background-image: url('cid:bgimage');
+            background-size: cover;
+            background-position: center;
+            background-repeat: no-repeat;
+            width: 100%;
+            padding: 40px 0;
+          }}
+          .container {{
+            max-width: 600px;
+            margin: 0 auto;
+            background-color: rgba(255, 255, 255, 0.95);
+            padding: 30px;
+            border-radius: 12px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+            text-align: center;
+          }}
+          h1 {{
+            font-size: 26px;
+            color: #1d1d1f;
+            margin-bottom: 20px;
+          }}
+          p {{
+            font-size: 16px;
+            line-height: 1.6;
+            color: #333;
+          }}
+          .button {{
+            display: inline-block;
+            margin: 20px 0;
+            padding: 14px 28px;
+            background-color: #007AFF;
+            color: white;
+            text-decoration: none;
+            border-radius: 8px;
+            font-weight: 600;
+          }}
+          .footer {{
+            margin-top: 30px;
+            font-size: 13px;
+            color: #888;
+          }}
+        </style>
+      </head>
+      <body>
+        <div class="background">
+          <div class="container">
+            <h1>Приглашение в организацию</h1>
+            <p>Здравствуйте, {fullName}!</p>
+            <p>Вас пригласили присоединиться к организации <strong>{orgName}</strong>.</p>
+            <a href="{invite_url}" class="button">Принять приглашение</a>
+            <p class="footer">
+              С любовью, команда <strong>devoriole.ru ❤️</strong>
+            </p>
+          </div>
+        </div>
+      </body>
+    </html>
+    """
+    message = MIMEMultipart("related")
+    message["From"] = EMAIL_ADDRESS
+    message["To"] = email
+    message["Subject"] = subject
+    html_part = MIMEText(body, "html")
+    message.attach(html_part)
+    try:
+        with smtplib.SMTP_SSL(SMTP_SERVER, SMTP_PORT) as server:
+            server.login(EMAIL_ADDRESS, EMAIL_PASSWORD)
+            server.sendmail(EMAIL_ADDRESS, email, message.as_string())
+        print(f"Приглашение отправлено на {email}")
+    except Exception as e:
+        print(f"Ошибка отправки письма: {e}")
+        raise

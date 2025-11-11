@@ -1,10 +1,11 @@
-from fastapi import APIRouter, Depends
+from fastapi import APIRouter, Depends, Query
 from app.models.auth import UserCreate, UserLogin, VerifyEmailRequest, UserResponse, User, ResendVerificationRequest
 from fastapi.security import OAuth2PasswordBearer
 from app.services.service import auth_service, send_ver
 from app.core.core import get_db, SessionLocal as Session
 from app.core.security import get_me
 from uuid import UUID
+from typing import Optional
 
 
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl="/api/auth/login")
@@ -18,15 +19,14 @@ async def health():
     return {"status": "otter said: i'm okey! thank u <3"}
 
 @router.post("/auth/reg", tags=auth_tags, summary="Регистрация пользователя")
-async def register(user: UserCreate, db: Session = Depends(get_db)):
+async def register(user: UserCreate, invite: Optional[str] = Query(None), db: Session = Depends(get_db)):
     service = auth_service(db)
-    return await service.register(user)
-
+    return await service.register(user, invite)
 
 @router.post("/auth/login", tags=auth_tags, summary="Вход пользователя")
-async def login(user: UserLogin, db: Session = Depends(get_db)):
+async def login(user: UserLogin, invite: Optional[str] = Query(None), db: Session = Depends(get_db)):
     service = auth_service(db)
-    return await service.login(user)
+    return await service.login(user, invite)
 
 
 @router.get("/auth/me", response_model=UserResponse, tags=auth_tags)

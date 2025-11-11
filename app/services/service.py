@@ -1,4 +1,5 @@
 from app.models.auth import UserCreate, UserLogin, User
+from app.models.orga import Invitation
 from app.core.core import get_db
 from app.utils.smtp import send_ver, gen_code, welcome
 from app.core.security import get_me
@@ -17,12 +18,21 @@ class AuthService:
     def __init__(self, db: Session):
         self.db = db
 
-    async def register(self, user: UserCreate):
+    async def register(self, user: UserCreate, invite_token: str = None):
         if self.db.query(User).filter(User.email == user.email).first():
             raise HTTPException(
                 status_code=status.HTTP_400_BAD_REQUEST,
                 detail="Email already exists ><(((*>"
             )
+        invitation = None
+        if invite_token:
+            invitation = self.db.query(Invitation).filter(
+                Invitation.token == invite_token,
+                Invitation.is_used == False,
+                Invitation.expires_at > datetime.now(timezone.utc)
+            ).first()
+            if invitation and invitation.email != user.email:
+                raise HTTPException(status_code=400, detail="Email mismatch")
 
         hashed_password = ph.hash(user.password[:72])
         code = gen_code()
@@ -33,7 +43,7 @@ class AuthService:
             email=user.email,
             phone=user.phone,
             password=hashed_password,
-            role=user.role or "User",
+            role=invitation.role if invitation else (user.role or "User"),
             companyName=user.companyName,
             timezone="UTC",
             is_active=False,
@@ -43,6 +53,10 @@ class AuthService:
         )
 
         self.db.add(db_user)
+        if invitation:
+            db_user.connect_organization = str(invitation.organization_id)
+            invitation.is_used = True
+            invitation.used_at = datetime.now(timezone.utc)
         self.db.commit()
         self.db.refresh(db_user)
 
@@ -121,7 +135,7 @@ class AuthService:
             "expires_in": 600
         }
 
-    async def login(self, user: UserLogin):
+    async def login(self, user: UserLogin, invite_token: str = None):
         db_user = self.db.query(User).filter(User.email == user.email).first()
         if not db_user:
             raise HTTPException(status_code=401, detail="User not found! Otter is sad :(")
@@ -135,6 +149,19 @@ class AuthService:
             raise HTTPException(status_code=401, detail="Wrong password! Otter is angry!")
         except Exception:
             raise HTTPException(status_code=401, detail="Wrong password! Otter is angry!")
+
+        if invite_token:
+            invitation = self.db.query(Invitation).filter(
+                Invitation.token == invite_token,
+                Invitation.is_used == False,
+                Invitation.expires_at > datetime.now(timezone.utc),
+                Invitation.email == user.email
+            ).first()
+            if invitation:
+                db_user.connect_organization = str(invitation.organization_id)
+                invitation.is_used = True
+                invitation.used_at = datetime.now(timezone.utc)
+                self.db.commit()
 
         payload = {
             "sub": str(db_user.id),

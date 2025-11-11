@@ -124,3 +124,24 @@ class OrgaUpdate(BaseModel):
 
     class Config:
         from_attributes = True
+
+class Invitation(Base):
+    __tablename__ = "invitations"
+
+    id = Column(pgUUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    organization_id = Column(pgUUID(as_uuid=True), ForeignKey("organisations.id", ondelete="CASCADE"), nullable=False, index=True)
+    token = Column(String, unique=True, nullable=False, index=True)
+    email = Column(String, nullable=False, index=True)
+    fullName = Column(String, nullable=False)
+    phone = Column(String, nullable=True)
+    role = Column(String, nullable=False)
+    is_used = Column(Boolean, default=False, nullable=False)
+    created_at = Column(DateTime(timezone=True), server_default=text("TIMEZONE('utc', NOW())"), nullable=False)
+    expires_at = Column(DateTime(timezone=True), nullable=False)
+    used_at = Column(DateTime(timezone=True), nullable=True)
+
+class InvitationCreate(BaseModel):
+    email: str
+    fullName: str
+    phone: str | None = None
+    role: str = "User"
