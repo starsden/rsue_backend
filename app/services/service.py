@@ -70,7 +70,7 @@ class AuthService:
         if user.ver_code != code:
             raise HTTPException(status_code=400, detail="Invalid verification code")
 
-        if datetime.now(timezone.utc) > user.code_expires_at:
+        if datetime.utcnow() > user.code_expires_at:
             raise HTTPException(status_code=400, detail="Verification code expired")
 
         user.email_verified = True
@@ -95,7 +95,7 @@ class AuthService:
         if user.email_verified:
             raise HTTPException(status_code=400, detail="Otter has already seen such mail somewhere! Try another email")
 
-        if user.code_expires_at and datetime.now(timezone.utc) < user.code_expires_at:
+        if user.code_expires_at and datetime.utcnow() < user.code_expires_at:
             raise HTTPException(
                 status_code=429,
                 detail="stop! i don't like this. please wait "
