@@ -21,18 +21,16 @@ def req_found(current_user: User = Depends(get_me), db: Session = Depends(get_db
         )
 
     org = db.query(Orga).filter(
-        Orga.id == UUID(current_user.connect_organization),
-        Orga.user_id == current_user.id
+        Orga.id == UUID(current_user.connect_organization)
     ).first()
 
     if not org:
         raise HTTPException(
             status_code=403,
-            detail="you arent founder of this organisation( "
+            detail="Organization not found"
         )
 
     return current_user, UUID(current_user.connect_organization)
-
 
 @sklad.post("/", response_model=SkladsResponse, status_code=status.HTTP_201_CREATED)
 async def create_sklad(
