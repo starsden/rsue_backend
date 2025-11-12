@@ -5,6 +5,7 @@ from app.routers.sklads import sklad
 from app.routers.nomen_rt import nomen
 from app.routers.report_rt import pdf
 from app.routers.stock_rt import stockk
+from app.routers.offline_rt import offline
 from app.routers.sklad_docs_rt import docs
 from app.core.core import engine, Base
 from fastapi.middleware.cors import CORSMiddleware
@@ -28,6 +29,7 @@ app.include_router(sklad)
 app.include_router(nomen)
 app.include_router(pdf)
 app.include_router(stockk)
+app.include_router(offline)
 app.include_router(docs)
 
 
