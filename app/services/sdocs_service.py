@@ -33,7 +33,9 @@ class SkladDocumentService:
             sklad_ids=data.sklad_ids,
             doc_type=data.doc_type,
             number=data.number,
-            description=data.description
+            description=data.description,
+            address_from=data.address_from.dict() if data.address_from else None,
+            address_to=data.address_to.dict() if data.address_to else None
         )
         self.db.add(doc)
         self.db.commit()
@@ -59,6 +61,10 @@ class SkladDocumentService:
         if data.sklad_ids:
             self._validate_sklads(data.sklad_ids, org_id)
         update_dict = data.dict(exclude_unset=True)
+        if "address_from" in update_dict and update_dict["address_from"]:
+            update_dict["address_from"] = update_dict["address_from"].dict() if hasattr(update_dict["address_from"], "dict") else update_dict["address_from"]
+        if "address_to" in update_dict and update_dict["address_to"]:
+            update_dict["address_to"] = update_dict["address_to"].dict() if hasattr(update_dict["address_to"], "dict") else update_dict["address_to"]
         for key, value in update_dict.items():
             setattr(doc, key, value)
         self.db.commit()
@@ -88,7 +94,11 @@ class SkladDocumentService:
         item = SkladDocumentItem(
             document_id=doc_id,
             nomenclature_id=data.nomenclature_id,
-            quantity=data.quantity
+            name=data.name or nomen.name,
+            unit=data.unit or nomen.unit,
+            packaging=data.packaging.dict() if data.packaging else None,
+            quantity_documental=data.quantity_documental,
+            quantity_actual=data.quantity_actual
         )
         self.db.add(item)
         self.db.commit()
@@ -121,6 +131,8 @@ class SkladDocumentService:
             if not nomen:
                 raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Nomenclature not found")
         update_dict = data.dict(exclude_unset=True)
+        if "packaging" in update_dict and update_dict["packaging"]:
+            update_dict["packaging"] = update_dict["packaging"].dict() if hasattr(update_dict["packaging"], "dict") else update_dict["packaging"]
         for key, value in update_dict.items():
             setattr(item, key, value)
         self.db.commit()

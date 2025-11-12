@@ -22,6 +22,8 @@ class SkladDocument(Base):
     doc_type = Column(Enum(SkladDocumentType), nullable=False, index=True)
     number = Column(String, nullable=False)
     description = Column(String, nullable=True)
+    address_from = Column(JSONB, nullable=True)
+    address_to = Column(JSONB, nullable=True)
     created_at = Column(DateTime(timezone=True), server_default=text("TIMEZONE('utc', now())"), nullable=False)
     updated_at = Column(DateTime(timezone=True), server_default=text("TIMEZONE('utc', now())"), onupdate=text("TIMEZONE('utc', now())"), nullable=False)
     is_deleted = Column(Boolean, default=False, nullable=False)
@@ -32,36 +34,68 @@ class SkladDocumentItem(Base):
     id = Column(pgUUID(as_uuid=True), primary_key=True, default=uuid4)
     document_id = Column(pgUUID(as_uuid=True), ForeignKey("sklad_doc.id", ondelete="CASCADE"), nullable=False, index=True)
     nomenclature_id = Column(pgUUID(as_uuid=True), ForeignKey("nomenclature.id", ondelete="CASCADE"), nullable=False, index=True)
-    quantity = Column(Integer, nullable=False)
+    name = Column(String, nullable=True)
+    unit = Column(String, nullable=True)
+    packaging = Column(JSONB, nullable=True)
+    quantity_documental = Column(Integer, nullable=False)
+    quantity_actual = Column(Integer, nullable=True)
     created_at = Column(DateTime(timezone=True), server_default=text("TIMEZONE('utc', now())"), nullable=False)
     updated_at = Column(DateTime(timezone=True), server_default=text("TIMEZONE('utc', now())"), onupdate=text("TIMEZONE('utc', now())"), nullable=False)
     is_deleted = Column(Boolean, default=False, nullable=False)
+
+class Address(BaseModel):
+    country: Optional[str] = None
+    city: Optional[str] = None
+    street: Optional[str] = None
+    postalCode: Optional[str] = None
+    building: Optional[str] = None
 
 class SkladDocumentCreate(BaseModel):
     sklad_ids: List[UUID]
     doc_type: SkladDocumentType
     number: str
     description: Optional[str] = None
+    address_from: Optional[Address] = None
+    address_to: Optional[Address] = None
 
 class SkladDocumentUpdate(BaseModel):
     sklad_ids: Optional[List[UUID]] = None
     doc_type: Optional[SkladDocumentType] = None
     number: Optional[str] = None
     description: Optional[str] = None
+    address_from: Optional[Address] = None
+    address_to: Optional[Address] = None
+
+class Packaging(BaseModel):
+    name: str
+    base_units: int = Field(..., ge=1)
+    barcode: Optional[str] = None
 
 class SkladDocumentItemCreate(BaseModel):
     nomenclature_id: UUID
-    quantity: int = Field(..., ge=1)
+    name: Optional[str] = None
+    unit: Optional[str] = None
+    packaging: Optional[Packaging] = None
+    quantity_documental: int = Field(..., ge=0)
+    quantity_actual: Optional[int] = Field(None, ge=0)
 
 class SkladDocumentItemUpdate(BaseModel):
     nomenclature_id: Optional[UUID] = None
-    quantity: Optional[int] = Field(None, ge=1)
+    name: Optional[str] = None
+    unit: Optional[str] = None
+    packaging: Optional[Packaging] = None
+    quantity_documental: Optional[int] = Field(None, ge=0)
+    quantity_actual: Optional[int] = Field(None, ge=0)
 
 class SkladDocumentItemResponse(BaseModel):
     id: UUID
     document_id: UUID
     nomenclature_id: UUID
-    quantity: int
+    name: Optional[str]
+    unit: Optional[str]
+    packaging: Optional[dict]
+    quantity_documental: int
+    quantity_actual: Optional[int]
     created_at: datetime
     updated_at: datetime
 
@@ -76,6 +110,8 @@ class SkladDocumentResponse(BaseModel):
     doc_type: SkladDocumentType
     number: str
     description: Optional[str]
+    address_from: Optional[dict]
+    address_to: Optional[dict]
     created_at: datetime
     updated_at: datetime
     is_deleted: bool
