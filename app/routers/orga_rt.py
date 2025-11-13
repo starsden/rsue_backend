@@ -166,7 +166,7 @@ async def upd_org(org_id: UUID, update_data: OrgaUpdate, db: Session = Depends(g
     return upd_orga(db=db, org_id=org_id, user_id=current_user.id, update_data=update_data)
 
 @orga.post("/{org_id}/invite", response_model=InvitationResponse, status_code=status.HTTP_201_CREATED, tags=["Organisation User"])
-async def create_invite(org_id: UUID, payload: OrganizationInvitationCreate, db: Session = Depends(get_db), current_user: User = Depends(get_me)) -> InvitationResponse:
+async def create_invites(org_id: UUID, payload: OrganizationInvitationCreate, db: Session = Depends(get_db), current_user: User = Depends(get_me)) -> InvitationResponse:
     return create_invite(db, org_id=org_id, payload=payload, current_user=current_user)
 
 
