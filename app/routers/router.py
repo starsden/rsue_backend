@@ -1,11 +1,21 @@
 from fastapi import APIRouter, Depends, Query
-from app.models.auth import UserCreate, UserLogin, VerifyEmailRequest, UserResponse, User, ResendVerificationRequest
 from fastapi.security import OAuth2PasswordBearer
-from app.services.service import auth_service, send_ver
+from typing import Optional
+from uuid import UUID
+
 from app.core.core import get_db, SessionLocal as Session
 from app.core.security import get_me
-from uuid import UUID
-from typing import Optional
+from app.models.auth import (
+    User,
+    UserCreate,
+    UserLogin,
+    UserResponse,
+    VerifyEmailRequest,
+    ResendVerificationRequest,
+)
+from app.models.user_profile import CurrentUserResponse
+from app.services.invitation_service import list_user
+from app.services.service import auth_service, send_ver
 
 
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl="/api/auth/login")
@@ -29,13 +39,16 @@ async def login(user: UserLogin, invite: Optional[str] = Query(None), db: Sessio
     return await service.login(user, invite)
 
 
-@router.get("/auth/me", response_model=UserResponse, tags=auth_tags)
-async def get_me(current_user: User = Depends(get_me)):
-    return UserResponse(
+@router.get("/auth/me", response_model=CurrentUserResponse, tags=auth_tags)
+async def get_me(current_user: User = Depends(get_me), db: Session = Depends(get_db)):
+    invitations = list_user(db, current_user=current_user)
+    return CurrentUserResponse(
         id=str(current_user.id),
         username=current_user.fullName,
         email=current_user.email,
         role=current_user.role,
+        choosen_sklad=current_user.choosen_sklad,
+        invitations=invitations,
     )
 
 @router.post("/auth/verify", tags=auth_tags, summary="Подтверждение почты")

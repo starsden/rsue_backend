@@ -4,9 +4,22 @@ from app.core.core import get_db
 from app.core.security import get_me
 from app.services.orga_service import cr_orga, del_orga, upd_orga
 from app.services.qr_service import QrService
-from app.models.orga import OrgaCreate, OrgaResponse, QrCodeResponse, QrCode, Orga, UserInOrgaResp, MyOrga, UsersInOrg, DeleteOrga, OrgaUpdate, Invitation, InvitationCreate
-from app.utils.smtp import send_invitation
-from app.utils.qr import generate_token
+from app.services.invitation_service import create_invite, cancel_invite
+from app.models.orga import (
+    OrgaCreate,
+    OrgaResponse,
+    QrCodeResponse,
+    QrCode,
+    Orga,
+    UserInOrgaResp,
+    MyOrga,
+    UsersInOrg,
+    DeleteOrga,
+    OrgaUpdate,
+    InvitationResponse,
+    OrganizationInvitationCreate,
+)
+from app.models.user_profile import InvitationActionResponse
 from app.models.auth import User
 from fastapi import Depends, HTTPException
 from uuid import UUID
@@ -145,33 +158,18 @@ async def get_my_org(current_user: User = Depends(get_me), db: Session = Depends
 
 
 @orga.delete("/{org_id}", response_model=dict, status_code=status.HTTP_200_OK, summary="Удалить организацию (с подтверждением паролем)", tags=["Organisation"])
-async def delete_orga(org_id: UUID, request: DeleteOrga, db: Session = Depends(get_db), current_user: User = Depends(get_me)):
+async def del_orga(org_id: UUID, request: DeleteOrga, db: Session = Depends(get_db), current_user: User = Depends(get_me)):
     return del_orga(db=db, org_id=org_id, user_id=current_user.id, password=request.password)
 
 @orga.patch("/upd/{org_id}", response_model=dict, status_code=status.HTTP_200_OK, summary="Обновить организацию", tags=["Organisation"])
-async def update_organization_endpoint(org_id: UUID, update_data: OrgaUpdate, db: Session = Depends(get_db), current_user: User = Depends(get_me)):
+async def upd_org(org_id: UUID, update_data: OrgaUpdate, db: Session = Depends(get_db), current_user: User = Depends(get_me)):
     return upd_orga(db=db, org_id=org_id, user_id=current_user.id, update_data=update_data)
 
-@orga.post("/{org_id}/invite", status_code=status.HTTP_201_CREATED, tags=["Organisation"])
-async def create_invitation(org_id: UUID, invite: InvitationCreate, db: Session = Depends(get_db), current_user: User = Depends(get_me)):
-    if current_user.connect_organization != str(org_id):
-        raise HTTPException(status_code=403, detail="Access denied")
-    org = db.query(Orga).filter(Orga.id == org_id, Orga.is_deleted == False).first()
-    if not org:
-        raise HTTPException(status_code=404, detail="Organization not found")
-    token = generate_token()
-    expires_at = datetime.now(timezone.utc) + timedelta(days=7)
-    invitation = Invitation(
-        organization_id=org_id,
-        token=token,
-        email=invite.email,
-        fullName=invite.fullName,
-        phone=invite.phone,
-        role=invite.role,
-        expires_at=expires_at
-    )
-    db.add(invitation)
-    db.commit()
-    invite_url = f"https://rsue.devoriole.ru/auth?invite={token}"
-    send_invitation(invite.email, invite.fullName, org.legalName, invite_url)
-    return {"message": "Invitation sent", "token": token}
+@orga.post("/{org_id}/invitations", response_model=InvitationResponse, status_code=status.HTTP_201_CREATED, tags=["Organisation User"])
+async def create_invite(org_id: UUID, payload: OrganizationInvitationCreate, db: Session = Depends(get_db), current_user: User = Depends(get_me)) -> InvitationResponse:
+    return create_invite(db, org_id=org_id, payload=payload, current_user=current_user)
+
+
+@orga.delete("/{org_id}/invitations/{invitation_id}", response_model=InvitationActionResponse, status_code=status.HTTP_200_OK, tags=["Organisation User"])
+async def cancel_invite(org_id: UUID, invitation_id: UUID, db: Session = Depends(get_db), current_user: User = Depends(get_me),) -> InvitationActionResponse:
+    return cancel_invite(db, org_id=org_id, invitation_id=invitation_id, current_user=current_user)
