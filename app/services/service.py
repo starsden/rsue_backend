@@ -29,6 +29,7 @@ class AuthService:
             invitation = self.db.query(Invitation).filter(
                 Invitation.token == invite_token,
                 Invitation.is_used == False,
+                Invitation.status == "pending",
                 Invitation.expires_at > datetime.now(timezone.utc)
             ).first()
             if invitation and invitation.email != user.email:
@@ -56,7 +57,10 @@ class AuthService:
         if invitation:
             db_user.connect_organization = str(invitation.organization_id)
             invitation.is_used = True
+            invitation.status = "accepted"
             invitation.used_at = datetime.now(timezone.utc)
+            invitation.responded_at = datetime.now(timezone.utc)
+            invitation.user_id = db_user.id
         self.db.commit()
         self.db.refresh(db_user)
 
@@ -154,13 +158,17 @@ class AuthService:
             invitation = self.db.query(Invitation).filter(
                 Invitation.token == invite_token,
                 Invitation.is_used == False,
+                Invitation.status == "pending",
                 Invitation.expires_at > datetime.now(timezone.utc),
                 Invitation.email == user.email
             ).first()
             if invitation:
                 db_user.connect_organization = str(invitation.organization_id)
                 invitation.is_used = True
+                invitation.status = "accepted"
                 invitation.used_at = datetime.now(timezone.utc)
+                invitation.responded_at = datetime.now(timezone.utc)
+                invitation.user_id = db_user.id
                 self.db.commit()
 
         payload = {
