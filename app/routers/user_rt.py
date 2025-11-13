@@ -13,12 +13,12 @@ from app.services.invitation_service import get_user, respond_to_invite, search_
 user = APIRouter(prefix="/api/users", tags=["Users"])
 
 
-@user.get("/search", response_model=UserSearchResponse, summary="Find user by single parameter")
+@user.get("/search", response_model=UserSearchResponse)
 async def find_user(org_id: UUID, email: str | None = None, phone: str | None = None, full_name: str | None = None, db: Session = Depends(get_db), current_user: User = Depends(get_me)) -> UserSearchResponse:
     return search_by_parameter(db, current_user=current_user, org_id=org_id, email=email, phone=phone, full_name=full_name)
 
 
-@user.get("/me/dashboard", response_model=UserDashboardResponse, summary="User dashboard with invitations")
+@user.get("/me/dashboard", response_model=UserDashboardResponse)
 async def get_dashboard(db: Session = Depends(get_db), current_user: User = Depends(get_me)) -> UserDashboardResponse:
     return get_user(db, current_user=current_user)
 
