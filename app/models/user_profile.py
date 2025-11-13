@@ -32,6 +32,13 @@ class UserDashboardResponse(BaseModel):
     class Config:
         from_attributes = True
         populate_by_name = True
+class CurrentUserResponse(BaseModel):
+    id: str
+    username: str
+    email: str
+    role: str
+    choosen_sklad: UUID | None = None
+    invitations: List[InvitationResponse]
 
 
 class InvitationActionRequest(BaseModel):

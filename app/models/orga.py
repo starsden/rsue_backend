@@ -130,18 +130,59 @@ class Invitation(Base):
 
     id = Column(pgUUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
     organization_id = Column(pgUUID(as_uuid=True), ForeignKey("organisations.id", ondelete="CASCADE"), nullable=False, index=True)
+    user_id = Column(pgUUID(as_uuid=True), ForeignKey("users.id", ondelete="CASCADE"), nullable=True, index=True)
     token = Column(String, unique=True, nullable=False, index=True)
     email = Column(String, nullable=False, index=True)
     fullName = Column(String, nullable=False)
     phone = Column(String, nullable=True)
     role = Column(String, nullable=False)
+    status = Column(String, nullable=False, default="pending")
     is_used = Column(Boolean, default=False, nullable=False)
     created_at = Column(DateTime(timezone=True), server_default=text("TIMEZONE('utc', NOW())"), nullable=False)
     expires_at = Column(DateTime(timezone=True), nullable=False)
     used_at = Column(DateTime(timezone=True), nullable=True)
+    responded_at = Column(DateTime(timezone=True), nullable=True)
 
 class InvitationCreate(BaseModel):
     email: str
     fullName: str
     phone: str | None = None
     role: str = "User"
+
+
+class OrganizationInvitationCreate(BaseModel):
+    identifier_type: Literal["email", "phone", "full_name"]
+    identifier_value: str = Field(..., min_length=1)
+    role: str = "User"
+    expires_in_hours: int = Field(default=168, ge=1, le=720)
+
+
+class InvitationResponse(BaseModel):
+    id: UUID
+    organization_id: UUID
+    user_id: UUID | None = None
+    token: str
+    email: str
+    fullName: str
+    phone: str | None = None
+    role: str
+    status: Literal["pending", "accepted", "declined", "cancelled"]
+    created_at: datetime
+    expires_at: datetime
+    used_at: datetime | None = None
+    responded_at: datetime | None = None
+
+    class Config:
+        from_attributes = True
+
+
+class UserLookupResponse(BaseModel):
+    id: UUID
+    fullName: str
+    email: str
+    phone: str | None = None
+    role: str | None = None
+    connect_organization: str | None = None
+
+    class Config:
+        from_attributes = True
