@@ -23,7 +23,7 @@ async def get_dashboard(db: Session = Depends(get_db), current_user: User = Depe
     return get_user(db, current_user=current_user)
 
 
-@user.post("/me/invitations/{invitation_id}", response_model=InvitationActionResponse)
+@user.post("/me/invite/{invitation_id}", response_model=InvitationActionResponse)
 async def handle_invitation(invitation_id: UUID, request: InvitationActionRequest, db: Session = Depends(get_db), current_user: User = Depends(get_me),) -> InvitationActionResponse:
     return respond_to_invite(db, invitation_id=invitation_id, current_user=current_user, action=request.action)
 

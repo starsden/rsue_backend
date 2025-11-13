@@ -165,11 +165,11 @@ async def del_orga(org_id: UUID, request: DeleteOrga, db: Session = Depends(get_
 async def upd_org(org_id: UUID, update_data: OrgaUpdate, db: Session = Depends(get_db), current_user: User = Depends(get_me)):
     return upd_orga(db=db, org_id=org_id, user_id=current_user.id, update_data=update_data)
 
-@orga.post("/{org_id}/invitations", response_model=InvitationResponse, status_code=status.HTTP_201_CREATED, tags=["Organisation User"])
+@orga.post("/{org_id}/invite", response_model=InvitationResponse, status_code=status.HTTP_201_CREATED, tags=["Organisation User"])
 async def create_invite(org_id: UUID, payload: OrganizationInvitationCreate, db: Session = Depends(get_db), current_user: User = Depends(get_me)) -> InvitationResponse:
     return create_invite(db, org_id=org_id, payload=payload, current_user=current_user)
 
 
-@orga.delete("/{org_id}/invitations/{invitation_id}", response_model=InvitationActionResponse, status_code=status.HTTP_200_OK, tags=["Organisation User"])
+@orga.delete("/{org_id}/invite/{invitation_id}", response_model=InvitationActionResponse, status_code=status.HTTP_200_OK, tags=["Organisation User"])
 async def cancel_invite(org_id: UUID, invitation_id: UUID, db: Session = Depends(get_db), current_user: User = Depends(get_me),) -> InvitationActionResponse:
     return cancel_invite(db, org_id=org_id, invitation_id=invitation_id, current_user=current_user)
