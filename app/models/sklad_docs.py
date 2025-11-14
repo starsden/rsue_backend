@@ -27,6 +27,7 @@ class SkladDocument(Base):
     created_at = Column(DateTime(timezone=True), server_default=text("TIMEZONE('utc', now())"), nullable=False)
     updated_at = Column(DateTime(timezone=True), server_default=text("TIMEZONE('utc', now())"), onupdate=text("TIMEZONE('utc', now())"), nullable=False)
     is_deleted = Column(Boolean, default=False, nullable=False)
+    is_verified = Column(Boolean, default=False, nullable=False)
 
 class SkladDocumentItem(Base):
     __tablename__ = "sklad_doc_items"
@@ -42,6 +43,7 @@ class SkladDocumentItem(Base):
     created_at = Column(DateTime(timezone=True), server_default=text("TIMEZONE('utc', now())"), nullable=False)
     updated_at = Column(DateTime(timezone=True), server_default=text("TIMEZONE('utc', now())"), onupdate=text("TIMEZONE('utc', now())"), nullable=False)
     is_deleted = Column(Boolean, default=False, nullable=False)
+    is_verified = Column(Boolean, default=False, nullable=False)
 
 class Address(BaseModel):
     country: Optional[str] = None
@@ -98,6 +100,7 @@ class SkladDocumentItemResponse(BaseModel):
     quantity_actual: Optional[int]
     created_at: datetime
     updated_at: datetime
+    is_verified: bool
 
     class Config:
         from_attributes = True
@@ -115,6 +118,7 @@ class SkladDocumentResponse(BaseModel):
     created_at: datetime
     updated_at: datetime
     is_deleted: bool
+    is_verified: bool
 
     class Config:
         from_attributes = True

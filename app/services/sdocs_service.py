@@ -98,9 +98,24 @@ class SkladDocumentService:
             unit=data.unit or nomen.unit,
             packaging=data.packaging.dict() if data.packaging else None,
             quantity_documental=data.quantity_documental,
-            quantity_actual=data.quantity_actual
+            quantity_actual=data.quantity_actual,
+            is_verified=data.quantity_actual is not None
         )
+
+        if data.quantity_actual is not None:
+            nomen.is_verified = True
+        
         self.db.add(item)
+        self.db.flush()
+
+
+        all_items = self.db.query(SkladDocumentItem).filter(
+            SkladDocumentItem.document_id == doc_id,
+            SkladDocumentItem.is_deleted == False
+        ).all()
+        if all_items and all(item.is_verified for item in all_items):
+            doc.is_verified = True
+        
         self.db.commit()
         self.db.refresh(item)
         return SkladDocumentItemResponse.from_orm(item)
@@ -133,8 +148,25 @@ class SkladDocumentService:
         update_dict = data.dict(exclude_unset=True)
         if "packaging" in update_dict and update_dict["packaging"]:
             update_dict["packaging"] = update_dict["packaging"].dict() if hasattr(update_dict["packaging"], "dict") else update_dict["packaging"]
+
+        if "quantity_actual" in update_dict and update_dict["quantity_actual"] is not None:
+            item.is_verified = True
+            nomen = self.db.query(Nomenclature).filter(Nomenclature.id == item.nomenclature_id).first()
+            if nomen:
+                nomen.is_verified = True
+        
         for key, value in update_dict.items():
             setattr(item, key, value)
+
+        doc = self.db.query(SkladDocument).filter(SkladDocument.id == item.document_id).first()
+        if doc:
+            all_items = self.db.query(SkladDocumentItem).filter(
+                SkladDocumentItem.document_id == doc.id,
+                SkladDocumentItem.is_deleted == False
+            ).all()
+            if all_items and all(item.is_verified for item in all_items):
+                doc.is_verified = True
+        
         self.db.commit()
         self.db.refresh(item)
         return SkladDocumentItemResponse.from_orm(item)

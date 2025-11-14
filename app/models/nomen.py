@@ -24,6 +24,7 @@ class Nomenclature(Base):
     updated_at = Column(DateTime, server_default=text("TIMEZONE('utc', now())"),
                         onupdate=text("TIMEZONE('utc', now())"), nullable=False)
     is_deleted = Column(Boolean, default=False, nullable=False)
+    is_verified = Column(Boolean, default=False, nullable=False)
 
     def __repr__(self):
         return f"<Nomenclature {self.name} ({self.article})>"
@@ -88,6 +89,7 @@ class NomenclatureResponse(BaseModel):
     created_at: datetime
     updated_at: datetime
     is_deleted: bool
+    is_verified: bool
 
     class Config:
         from_attributes = True
