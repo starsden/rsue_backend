@@ -15,6 +15,7 @@ class Orga(Base):
     legalName = Column(String, nullable=False)
     description = Column(String)
     inn = Column(String, unique=True, index=True)
+    kpp = Column(String, unique=True, index=True)
     address = Column(JSONB, nullable=False, default=dict)
     settings = Column(JSONB, nullable=False, default=dict)
     is_deleted = Column(Boolean, default=False, nullable=False)
@@ -53,6 +54,7 @@ class OrgaCreate(BaseModel):
     legalName: str = Field(..., example="ООО РИОЛ")
     description: str | None = Field(None, example="Команда разработчиков")
     inn: str = Field(..., example="1234567890")
+    kpp: str = Field(..., examples="123123123")
     address: Address
     settings: Settings
 
@@ -61,6 +63,7 @@ class OrgaResponse(BaseModel):
     legalName: str
     description: str | None
     inn: str
+    kpp: str
     address: dict
     settings: dict
 
@@ -92,6 +95,7 @@ class MyOrga(BaseModel):
     legalName: str
     description: str | None = None
     inn: str
+    kpp: str
     address: dict
     settings: dict
     members_count: int
@@ -119,6 +123,7 @@ class OrgaUpdate(BaseModel):
     legalName: str | None = None
     description: str | None = None
     inn: str | None = None
+    kpp: str | None = None
     address: Address | None = None
     settings: Settings | None = None
 
