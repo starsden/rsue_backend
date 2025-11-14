@@ -54,7 +54,7 @@ class OrgaCreate(BaseModel):
     legalName: str = Field(..., example="ООО РИОЛ")
     description: str | None = Field(None, example="Команда разработчиков")
     inn: str = Field(..., example="1234567890")
-    kpp: str = Field(..., examples="123123123")
+    kpp: str = Field(..., example="123123123")
     address: Address
     settings: Settings
 
