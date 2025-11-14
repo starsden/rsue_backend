@@ -41,7 +41,7 @@ async def get_all_organizations(skip: int = 0, limit: int = 100, db: Session = D
         limit = 1
     if skip < 0:
         skip = 0
-    
+
     organizations = db.query(Orga).offset(skip).limit(limit).all()
     return [OrgaResponse.from_orm(org) for org in organizations]
 
@@ -59,11 +59,7 @@ async def get_qr(org_id: UUID, expires_in: int = 86400, db: Session = Depends(ge
 
 
 @orga.get("/join/{token}", tags=['QRs'])
-async def join_by(
-    token: str,
-    db: Session = Depends(get_db),
-    current_user: User = Depends(get_me)
-):
+async def join_by(token: str, db: Session = Depends(get_db), current_user: User = Depends(get_me)):
     qr = db.query(QrCode).filter(
         QrCode.token == token,
         QrCode.is_active == True,
@@ -97,11 +93,7 @@ async def join_by(
 
 
 @orga.get("/{org_id}/members", response_model=List[UserInOrgaResp], tags=["Organisation"])
-async def get_organization_members(
-    org_id: UUID,
-    db: Session = Depends(get_db),
-    current_user: User = Depends(get_me)
-):
+async def get_organization_members(org_id: UUID, db: Session = Depends(get_db), current_user: User = Depends(get_me)):
     if current_user.connect_organization != str(org_id):
         raise HTTPException(
             status_code=403,

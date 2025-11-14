@@ -20,6 +20,7 @@ def cr_orga(db: Session, org_data: OrgaCreate, user_id: UUID) -> OrgaResponse:
         legalName=org_data.legalName,
         description=org_data.description,
         inn=org_data.inn,
+        kpp=org_data.kpp,
         address=org_data.address.dict(),
         settings=org_data.settings.dict()
     )
