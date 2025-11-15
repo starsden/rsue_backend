@@ -1,0 +1,42 @@
+version: '3.8'
+
+services:
+  db:
+    image: postgres:15-alpine
+    container_name: rsue_db
+    environment:
+      POSTGRES_USER: ${DB_USER:-tapok}
+      POSTGRES_PASSWORD: ${DB_PASSWORD:-chinazes778}
+      POSTGRES_DB: ${DB_NAME:-rsue}
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    ports:
+      - "${DB_PORT:-5432}:5432"
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${DB_USER:-tapok}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  backend:
+    build: .
+    container_name: rsue_backend
+    command: uvicorn app.main:app --host 0.0.0.0 --port 8000 --reload
+    volumes:
+      - .:/app
+      - static_data:/app/static
+    ports:
+      - "${APP_PORT:-8000}:8000"
+    environment:
+      - DATABASE_URL=postgresql://${DB_USER:-tapok}:${DB_PASSWORD:-chinazes778}@db:5432/${DB_NAME:-rsue}
+    env_file:
+      - .env
+    depends_on:
+      db:
+        condition: service_healthy
+    restart: unless-stopped
+
+volumes:
+  postgres_data:
+  static_data:
+

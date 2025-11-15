@@ -142,6 +142,7 @@ async def get_my_org(current_user: User = Depends(get_me), db: Session = Depends
         legalName=org.legalName,
         description=org.description,
         inn=org.inn,
+        kpp=org.kpp,
         address=org.address,
         settings=org.settings,
         members_count=members_count,
