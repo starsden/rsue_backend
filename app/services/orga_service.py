@@ -1,10 +1,11 @@
-from app.models.orga import Orga, OrgaCreate, OrgaResponse, QrCode, OrgaUpdate
+from app.models.orga import Orga, OrgaCreate, OrgaResponse, QrCode, OrgaUpdate, Invitation
 from sqlalchemy.orm import Session
 from fastapi import HTTPException, status
 from uuid import UUID
 from app.models.auth import User
 from datetime import datetime, timezone
 from app.core.security import verify_password
+from app.utils.qr import generate_token
 
 
 def cr_orga(db: Session, org_data: OrgaCreate, user_id: UUID) -> OrgaResponse:
@@ -31,6 +32,24 @@ def cr_orga(db: Session, org_data: OrgaCreate, user_id: UUID) -> OrgaResponse:
     if not user:
         raise HTTPException(status_code=404, detail="Otter did not find such a user!")
     user.connect_organization = str(db_org.id)
+
+    join_time = datetime.now(timezone.utc)
+    creator_invitation = Invitation(
+        organization_id=db_org.id,
+        user_id=user.id,
+        token=generate_token(),
+        email=user.email,
+        fullName=user.fullName,
+        phone=user.phone,
+        role=user.role or "Founder",
+        status="accepted",
+        is_used=True,
+        used_at=join_time,
+        responded_at=join_time,
+        expires_at=join_time
+    )
+    db.add(creator_invitation)
+    
     db.commit()
     db.refresh(db_org)
 

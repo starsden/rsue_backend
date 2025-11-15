@@ -102,6 +102,7 @@ class MyOrga(BaseModel):
     settings: dict
     members_count: int
     members: List[UsersInOrg]
+    joined_at: datetime | None = None
 
     class Config:
         from_attributes = True

@@ -5,20 +5,7 @@ from app.core.security import get_me
 from app.services.orga_service import cr_orga, del_orga, upd_orga
 from app.services.qr_service import QrService
 from app.services.invitation_service import create_invite, cancel_invite
-from app.models.orga import (
-    OrgaCreate,
-    OrgaResponse,
-    QrCodeResponse,
-    QrCode,
-    Orga,
-    UserInOrgaResp,
-    MyOrga,
-    UsersInOrg,
-    DeleteOrga,
-    OrgaUpdate,
-    InvitationResponse,
-    OrganizationInvitationCreate,
-)
+from app.models.orga import OrgaCreate, OrgaResponse, QrCodeResponse, QrCode, Orga, UserInOrgaResp, MyOrga, UsersInOrg,  DeleteOrga, OrgaUpdate, InvitationResponse, OrganizationInvitationCreate
 from app.models.user_profile import InvitationActionResponse
 from app.models.auth import User
 from app.models.orga import Invitation
@@ -76,6 +63,37 @@ async def join_by(token: str, db: Session = Depends(get_db), current_user: User 
 
     if current_user.connect_organization != str(org.id):
         current_user.connect_organization = str(org.id)
+
+        join_time = datetime.now(timezone.utc)
+        existing_invitation = db.query(Invitation).filter(
+            Invitation.user_id == current_user.id,
+            Invitation.organization_id == org.id
+        ).first()
+        
+        if existing_invitation:
+            existing_invitation.status = "accepted"
+            existing_invitation.is_used = True
+            existing_invitation.used_at = join_time
+            existing_invitation.responded_at = join_time
+            existing_invitation.user_id = current_user.id
+        else:
+            from app.utils.qr import generate_token
+            new_invitation = Invitation(
+                organization_id=org.id,
+                user_id=current_user.id,
+                token=generate_token(),
+                email=current_user.email,
+                fullName=current_user.fullName,
+                phone=current_user.phone,
+                role=current_user.role or "User",
+                status="accepted",
+                is_used=True,
+                used_at=join_time,
+                responded_at=join_time,
+                expires_at=join_time
+            )
+            db.add(new_invitation)
+        
         db.commit()
         db.refresh(current_user)
 
@@ -105,18 +123,21 @@ async def get_organization_members(org_id: UUID, db: Session = Depends(get_db), 
         User.connect_organization == str(org_id)
     ).all()
 
-    # Получаем даты присоединения из таблицы invitations
     result = []
     for member in members:
-        # Ищем принятое приглашение для этого пользователя и организации
-        # Сначала по user_id, затем по email (на случай, если пользователь был создан через приглашение)
         invitation = db.query(Invitation).filter(
             Invitation.organization_id == org_id,
             Invitation.status == "accepted",
-            (Invitation.user_id == member.id) | (Invitation.email == member.email)
+            Invitation.user_id == member.id
         ).order_by(Invitation.used_at.desc()).first()
-        
-        # Используем used_at или responded_at как дату присоединения
+
+        if not invitation:
+            invitation = db.query(Invitation).filter(
+                Invitation.organization_id == org_id,
+                Invitation.status == "accepted",
+                Invitation.email == member.email
+            ).order_by(Invitation.used_at.desc()).first()
+
         joined_at = None
         if invitation:
             joined_at = invitation.used_at or invitation.responded_at
