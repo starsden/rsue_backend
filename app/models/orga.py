@@ -76,6 +76,7 @@ class UserInOrgaResp(BaseModel):
     email: str
     role: str | None = None
     connect_organization: str | None = None
+    joined_at: datetime | None = None
 
     class Config:
         from_attributes = True
@@ -85,6 +86,7 @@ class UsersInOrg(BaseModel):
     fullName: str
     email: str
     phone: str | None = None
+    joined_at: datetime | None = None
 
     class Config:
         from_attributes = True

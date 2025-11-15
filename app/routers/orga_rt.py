@@ -21,6 +21,7 @@ from app.models.orga import (
 )
 from app.models.user_profile import InvitationActionResponse
 from app.models.auth import User
+from app.models.orga import Invitation
 from fastapi import Depends, HTTPException
 from uuid import UUID
 from typing import List
@@ -104,7 +105,33 @@ async def get_organization_members(org_id: UUID, db: Session = Depends(get_db), 
         User.connect_organization == str(org_id)
     ).all()
 
-    return [UserInOrgaResp.from_orm(m) for m in members]
+    # Получаем даты присоединения из таблицы invitations
+    result = []
+    for member in members:
+        # Ищем принятое приглашение для этого пользователя и организации
+        # Сначала по user_id, затем по email (на случай, если пользователь был создан через приглашение)
+        invitation = db.query(Invitation).filter(
+            Invitation.organization_id == org_id,
+            Invitation.status == "accepted",
+            (Invitation.user_id == member.id) | (Invitation.email == member.email)
+        ).order_by(Invitation.used_at.desc()).first()
+        
+        # Используем used_at или responded_at как дату присоединения
+        joined_at = None
+        if invitation:
+            joined_at = invitation.used_at or invitation.responded_at
+        
+        member_dict = {
+            "id": member.id,
+            "fullName": member.fullName,
+            "email": member.email,
+            "role": member.role,
+            "connect_organization": member.connect_organization,
+            "joined_at": joined_at
+        }
+        result.append(UserInOrgaResp(**member_dict))
+    
+    return result
 
 
 @orga.get("/me", response_model=MyOrga, tags=["Organisation"])
@@ -132,9 +159,27 @@ async def get_my_org(current_user: User = Depends(get_me), db: Session = Depends
     ).all()
 
     members_count = len(members)
-    members_list = [
-        UsersInOrg.from_orm(user) for user in members
-    ]
+    members_list = []
+    for user in members:
+        invitation = db.query(Invitation).filter(
+            Invitation.organization_id == org_id,
+            Invitation.status == "accepted",
+            (Invitation.user_id == user.id) | (Invitation.email == user.email)
+        ).order_by(Invitation.used_at.desc()).first()
+        
+
+        joined_at = None
+        if invitation:
+            joined_at = invitation.used_at or invitation.responded_at
+        
+        member_dict = {
+            "id": user.id,
+            "fullName": user.fullName,
+            "email": user.email,
+            "phone": user.phone,
+            "joined_at": joined_at
+        }
+        members_list.append(UsersInOrg(**member_dict))
 
     return MyOrga(
         id=org.id,
