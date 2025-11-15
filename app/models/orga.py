@@ -95,7 +95,7 @@ class MyOrga(BaseModel):
     legalName: str
     description: str | None = None
     inn: str
-    kpp: str
+    kpp: str | None = None
     address: dict
     settings: dict
     members_count: int
