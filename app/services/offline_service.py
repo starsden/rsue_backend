@@ -83,7 +83,10 @@ class OfflineService:
             device.is_active = False
             device.last_seen = datetime.now(timezone.utc)
             self.db.commit()
-            return {"message": "Exit registred! Thank you for your working! <3"}
+            raise HTTPException(
+                status_code=status.HTTP_202_ACCEPTED,
+                detail="Exit registred! Thank you for your working! <3"
+            )
 
         device_record = self.db.query(OfflineDevice).filter(
             OfflineDevice.token_id == offline_token.id,
