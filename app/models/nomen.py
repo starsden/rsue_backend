@@ -55,7 +55,7 @@ class NomenclatureProperties(BaseModel):
 class NomenclatureCreate(BaseModel):
     name: str = Field(..., example="Молоко Простоквашино 3.2%")
     article: str = Field(..., example="MLK-001")
-    barcode: Optional[str] = Field(None, example="4601234567890")
+    barcode: str = Field(..., example="4601234567890")
     quantity: Optional[int] = Field(None, example=1)
     unit: str = Field("pcs", example="pcs")
     category_id: str = Field(..., example="Молочные продукты")
